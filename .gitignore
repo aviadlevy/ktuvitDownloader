@@ -57,6 +57,9 @@ docs/_build/
 # PyBuilder
 target/
 
+# Python project files
+.idea/*
+
 # =========================
 # Operating System Files
 # =========================
@@ -107,3 +110,4 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
