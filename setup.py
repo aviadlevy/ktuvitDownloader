@@ -16,8 +16,9 @@ with io.open('ktuvitDownloader/__version__.py', 'r') as f:
 setup(
     name='ktuvitDownloader',
     version='0.1',
-    description=readme,
-    # url='http://github.com/storborg/funniest',
+    description="This package will allow you to auto-download subtitles from ktuvit.com website.",
+    long_description=readme,
+    url='https://github.com/aviadlevy/ktuvitDownloader/',
     classifiers=['Development Status :: 1 - Planning',
                  'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
                  'Operating System :: OS Independent',
@@ -31,6 +32,7 @@ setup(
     packages=['ktuvitDownloader'],
     install_requires=[
         'guessit',
+        'requests'
     ],
     entry_points={
         'console_scripts': [
