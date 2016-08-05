@@ -2,11 +2,8 @@ import os
 
 from guessit import guessit
 
-VIDEO_EXT = [".webm", ".mkv", ".flv", ".avi", ".mov", ".wmv", ".rm", ".rmvb", ".mp4", ".m4p", ".m4v", ".mpg", ".mpeg",
-             "mp2", ".mpe", ".mpv", ".m2v", ".m4v"]
+from const import *
 
-MB = 1024 * 1024
-KB = 1024
 
 def getPathsFiles(path):
     """

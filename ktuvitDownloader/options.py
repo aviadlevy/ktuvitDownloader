@@ -12,9 +12,9 @@ def get_args():
     settings_opt = opts.add_argument_group("Settings")
     settings_opt.add_argument('-r', '--reset', dest='reset', action='store_true', default=False,
                               help='Completely reset all the configuration.')
-    settings_opt.add_argument('-f', '--change-base-dir', dest='base_path', type=str, default="",
+    settings_opt.add_argument('-f', '--change-base-dir', dest='base_path', action='store_true', default=False,
                               help='Change the base dir of your videos.')
-    settings_opt.add_argument('-d', '--change-dest-dir', dest='dest_path', type=str, default="",
+    settings_opt.add_argument('-d', '--change-dest-dir', dest='dest_path', action='store_true', default=False,
                               help='Change the base dir of your videos.')
 
     information_opts = opts.add_argument_group("Information")
