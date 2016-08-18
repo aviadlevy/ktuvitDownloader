@@ -77,7 +77,7 @@ def main(args=None):
     files = getPathsFiles(base_dir)
     con = Connection(username, password)
     con.login()
-    con.download(guessit("UnREAL.S02E05.720p.HDTV.x264-FLEET"))
+    con.download("UnREAL.S02E05.720p.HDTV.x264-FLEET", guessit("UnREAL.S02E05.720p.HDTV.x264-FLEET"))
     # for tup_file in files.items():
     #     print val['title']
     con.close()
