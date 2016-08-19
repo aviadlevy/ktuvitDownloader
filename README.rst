@@ -7,15 +7,20 @@ This package will allow you to auto-download subtitles from ktuvit.com website.
 
 This is an Alpha version. use with caution.
 
-Install
--------
+Install:
 ::
-    pip install ktuvitDownloader
+  pip install ktuvitDownloader
 
-Usage
------
+Usage:
 ::
-    ktuvitDownloader -h
+  ktuvitDownloader -h
+  
+TODO List:
+---------
+- Improve logging system
+- Improve subtitle detection
+- Create caching system
+- Improve REASME.rst (this file)
 
 :Author:
     Aviad Levy
