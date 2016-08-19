@@ -1,33 +1,46 @@
 import ConfigParser
 import base64
+import logging
 import os
 from getpass import getpass
 
-from guessit import guessit
-
+from ktuvitDownloader.CustomExceptions import WrongLoginException, CantFindSubtitleException
 from ktuvitDownloader.__version__ import __version__
 from ktuvitDownloader.connection import Connection
-from ktuvitDownloader.files import getPathsFiles
+from ktuvitDownloader.const import *
+from ktuvitDownloader.files import getPathsFiles, moveFinshed
 from ktuvitDownloader.options import args_parse
-
-CONFIG_FILE = "config.cfg"
 
 config = ConfigParser.RawConfigParser()
 
+logging.basicConfig(filename=LOG_FILE, filemode="a", format="%(asctime)s\t%(levelname)s: %(message)s")
 
-def main(args=None):
+
+def main():
     """
     main function
     """
     options = args_parse.parse_args()
 
     if options.version:
-        print('+-------------------------------------------------------+')
-        print('+               ktuvitDownloader ' + __version__ + (23 - len(__version__)) * ' ' + '+')
-        print('+-------------------------------------------------------+')
-        print('|      Please report any bug or feature request at      |')
-        print('|                 aviadlevy1@gmail.com                  |')
-        print('+-------------------------------------------------------+')
+        print("+-------------------------------------------------------+")
+        print("+               ktuvitDownloader " + __version__ + (23 - len(__version__)) * " " + "+")
+        print("+-------------------------------------------------------+")
+        print("|      Please report any bug or feature request at      |")
+        print("| https://github.com/aviadlevy/ktuvitDownloader/issues  |")
+        print("+-------------------------------------------------------+")
+        exit(1)
+
+    if options.show_log:
+        if not os.path.isfile(LOG_FILE):
+            print "Nothing to show"
+        else:
+            with open(LOG_FILE, "r") as f:
+                text = f.read()
+                if not text:
+                    print "Nothing to show"
+                else:
+                    print text
         exit(1)
 
     if not os.path.isfile(CONFIG_FILE):
@@ -65,7 +78,7 @@ def main(args=None):
         config.add_section("Directories")
         config.set("Directories", "base_dir", base_dir)
         config.set("Directories", "dest_dir", dest_dir)
-        with open(CONFIG_FILE, 'wb') as f:
+        with open(CONFIG_FILE, "wb") as f:
             config.write(f)
 
     config.read(CONFIG_FILE)
@@ -75,13 +88,45 @@ def main(args=None):
     dest_dir = config.get("Directories", "dest_dir")
 
     files = getPathsFiles(base_dir)
+
+    downloaded = []
+
     con = Connection(username, password)
-    con.login()
-    con.download("UnREAL.S02E05.720p.HDTV.x264-FLEET", guessit("UnREAL.S02E05.720p.HDTV.x264-FLEET"))
-    # for tup_file in files.items():
-    #     print val['title']
-    con.close()
+
+    try:
+        con.login()
+    except WrongLoginException as e:
+        print repr(e)
+        logging.error(repr(e))
+        exit(-1)
+    except Exception as e:
+        logging.error(repr(e))
+
+    for path, data in files.items():
+        try:
+            vidExt = os.path.split(path)[1]
+            path = os.path.splitext(path)[0]
+            subFile, subExt = con.download(path.split("\\")[-1], data)
+            logging.info("Found " + path + "!")
+            with open(path + subExt, "w") as f:
+                f.write(subFile)
+            downloaded.append((path, subExt, vidExt))
+        except CantFindSubtitleException as e:
+            logging.warn(e)
+        except Exception as e:
+            logging.error(repr(e))
+
+    try:
+        con.close()
+    except Exception as e:
+        logging.error(repr(e))
+
+    if moveFinshed(downloaded, base_dir, dest_dir):
+        print "Done! check your Dest folder. you may find surprise\nTry again in a few hours, to prevent the chance " \
+          "you'll get ban"
+    else:
+        print "Done! try again in a few hours, to prevent the chance you'll get ban"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

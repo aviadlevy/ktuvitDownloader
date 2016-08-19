@@ -6,6 +6,7 @@ import re
 import zipfile
 
 from const import *
+from ktuvitDownloader.CustomExceptions import *
 
 try:
     from BeautifulSoup import BeautifulSoup
@@ -15,8 +16,15 @@ except ImportError:
 import requests
 
 
-def findBestUrl(allUrlSuff):
-    pass
+def findBestUrl(allUrlSuff, movType):
+    # find the first that match the type to our type
+    for urlSuff in allUrlSuff:
+        if ("tvshow" in urlSuff.find_next("img")["src"] and movType == "episode") or (
+                        "movie" in urlSuff.find_next("img")["src"] and movType == "movie"):
+            return urlSuff["href"]
+    # TODO: need to enhanced this to really find the best one, and not just return the first
+    # TODO: IMDB?
+    return allUrlSuff[0]["href"]
 
 
 def getHeaders():
@@ -30,12 +38,12 @@ def getHeaders():
 
 
 def getSeEpId(num, htmlToParse, seOrEp):
-    id = ""
+    vidId = ""
     ids = BeautifulSoup(htmlToParse.text, "html.parser").find_all("a", id=lambda x: x and x.startswith(seOrEp))
     for i in ids:
         if int(i.text) == num:
-            id = i["id"]
-    return id
+            vidId = i["id"]
+    return vidId
 
 
 class Connection(object):
@@ -45,58 +53,61 @@ class Connection(object):
         self.s = requests.Session()
 
     def login(self):
-        self.s.post(URL + URL_LOGIN, {"email": self.username, "password": self.password, "Login": "התחבר"})
+        r = self.s.post(URL + URL_LOGIN, {"email": self.username, "password": self.password, "Login": "התחבר"})
+
+        if LOGIN_ERROR in r.text.encode("utf-8"):
+            raise WrongLoginException("Wrong username or password. "
+                                      "please run \"ktuvitDownloader -r\" in order to "
+                                      "reset the username and password you entered")
+        if LOGIN_BLOCKED in r.text.encode("utf-8"):
+            raise WrongLoginException("Your username probably blocked. you need to register again.")
 
     def download(self, fullTitle, data):
-        print data
-        r = self.s.get(URL + URL_SEARCH + data["title"])
-        # with open("C:\\users\\win7\\desktop\\out.html", 'w') as f:
-        #     f.write(BeautifulSoup(r.text, "html.parser").prettify(encoding='utf-8'))
-        # todo: search for <a href="...." itemprop="url">
-        allUrlSuff = BeautifulSoup(r.text, "html.parser").find_all('a', {'itemprop': 'url'})
+
+        loginRes = self.s.get(URL + URL_SEARCH + data["title"])
+
+        allUrlSuff = BeautifulSoup(loginRes.text, "html.parser").find_all("a", {"itemprop": "url"})
         if len(allUrlSuff) > 1:
             # todo: find the best one
-            urlSuff = findBestUrl(allUrlSuff)
-            pass
+            urlSuff = findBestUrl(allUrlSuff, data["type"])
         else:
             try:
                 urlSuff = allUrlSuff[0]["href"]
-            except Exception as e:
-                raise Exception("Can't find this title: " + data["title"] + "\n" + repr(e))
+            except:
+                raise Exception("Can't find this title: " + data["title"])
 
         if data["type"] == "episode":
             subDownloadPage = self.downloadEpSub(data, urlSuff)
         else:
             subDownloadPage = self.downloadMovSub(data, urlSuff)
 
-        subId = ""
         try:
             subId = BeautifulSoup(subDownloadPage.text, "html.parser").find("div",
-                    title=fullTitle).parent.find_previous_sibling("tr").find("a")["name"]
-        except AttributeError as e:
+                                                                            title=fullTitle).parent.find_previous_sibling(
+                    "tr").find("a")["name"]
+        except AttributeError:
             try:
                 subId = BeautifulSoup(subDownloadPage.text, "html.parser").find_all("div",
-                        title=lambda x: x and x.endswith(data['release_group']))[0].parent.find_previous_sibling(
-                    "tr").find("a")["name"]
-            except Exception as e:
-                raise Exception("Can't find subtitle id\n\n" + repr(e))
+                                                                                    title=lambda x: x and x.endswith(
+                                                                                            data["release_group"]))[
+                    0].parent.find_previous_sibling("tr").find("a")["name"]
+            except Exception:
+                # TODO: try to find another ways to find the subId
+                # this is probably mean that the subtitle not here yet
+                title = data["title"]
+                if data["type"] == "episode":
+                    title += "." + str(data["season"]) + "." + str(data["episode"])
+                raise CantFindSubtitleException("Can't find subtitle id - for this title: " + title)
         except Exception as e:
             raise repr(e)
         if not subId:
             raise Exception("id is empty")
 
-        print subId
-
-        r5 = self.s.get(URL + URL_DOWNLOAD, params={'id': subId}, stream=True)
-        print r5.headers
-        z = zipfile.ZipFile(StringIO.StringIO(r5.content))
-        for n in z.namelist():
-            print os.path.splitext(n)[0]
-            print os.path.splitext(n)[1]
-            if os.path.splitext(n)[1] in SUB_EXT:
-                # print z.read(n)
-                # TODO: this is the file!
-                pass
+        subFileDownRes = self.s.get(URL + URL_DOWNLOAD, params={"id": subId}, stream=True)
+        z = zipfile.ZipFile(StringIO.StringIO(subFileDownRes.content))
+        for f in z.namelist():
+            if os.path.splitext(f)[1] in SUB_EXT:
+                return z.read(f).replace("\r\n", "\n"), os.path.splitext(f)[1]
 
     def downloadMovSub(self, data, urlSuff):
         urlSuffMatch = re.search("/tt1(\d+)/", urlSuff)
@@ -104,26 +115,28 @@ class Connection(object):
             urlSuff = urlSuffMatch.group(1)
         else:
             raise Exception("Can't find this title: " + data["title"] + "\n")
+
         subDownloadPage = self.s.get(URL + URL_AJAX + "?moviedetailssubtitles=" + urlSuff)
-        with open("C:\\users\\win7\\desktop\\out1.html", 'w') as f:
-            f.write(BeautifulSoup(subDownloadPage.text, "html.parser").prettify(encoding='utf-8'))
+        with open("C:\\users\\win7\\desktop\\out1.html", "w") as f:
+            f.write(BeautifulSoup(subDownloadPage.text, "html.parser").prettify(encoding="utf-8"))
         return subDownloadPage
 
     def downloadEpSub(self, data, urlSuff):
         resToParse = self.s.get(URL + urlSuff)
         seasonId = getSeEpId(data["season"], resToParse, "seasonlink_")
-        print seasonId
         if not seasonId:
             raise Exception("Can't find this season: " + str(data["season"]) + " - for this title: " + data["title"])
-        r4 = self.s.post(URL + URL_AJAX, params={"seasonid": seasonId})
-        episodeId = getSeEpId(data["episode"], r4, "episodelink_")
-        print episodeId
+
+        seasonRes = self.s.post(URL + URL_AJAX, params={"seasonid": seasonId})
+        episodeId = getSeEpId(data["episode"], seasonRes, "episodelink_")
         if not episodeId:
-            raise Exception("Can't find this episode: " + str(data["season"]) + " - for this title: " + data["title"])
-        r3 = self.s.post(URL + URL_AJAX, params={"episodedetails": episodeId})
-        with open("C:\\users\\win7\\desktop\\out1.html", 'w') as f:
-            f.write(BeautifulSoup(r3.text, "html.parser").prettify(encoding='utf-8'))
-        return r3
+            raise Exception("Can't find this episode: " + str(data["season"]) + "." + str(
+                    data["episode"]) + " - for this title: " + data["title"])
+
+        epRes = self.s.post(URL + URL_AJAX, params={"episodedetails": episodeId})
+        with open("C:\\users\\win7\\desktop\\out1.html", "w") as f:
+            f.write(BeautifulSoup(epRes.text, "html.parser").prettify(encoding="utf-8"))
+        return epRes
 
     def close(self):
         self.s.close()
