@@ -7,22 +7,36 @@ This package will allow you to auto-download subtitles from ktuvit.com website.
 
 This is an Alpha version. use with caution.
 
-Install:
-::
-  pip install ktuvitDownloader
-  
-Upgrade:
-::
-  pip install ktuvitDownloader --upgrade
+Install
+-------
 
-Usage:
-::
-  ktuvitDownloader -h
+Install with `pip <http://www.pip-installer.org/>`_::
 
-Run:
-::
-  ktuvitDownloader
+    $ pip install ktuvitDownloader
+
+Upgrade
+-------
+
+Upgrade with `pip <http://www.pip-installer.org/>`_::
   
+    $ pip install ktuvitDownloader --upgrade
+
+Run
+---
+
+Just run cmd (WinKey + R, then type *cmd* and Enter) then::
+  
+    $ ktuvitDownloader
+  
+
+Usage
+-----
+
+Just run cmd (WinKey + R, then type *cmd* and Enter) then::
+  
+    $ ktuvitDownloader -h
+
+
 The "flow" is:
 
 - scan *"base"* directory, and **clean** any files smaller than 750KB, or videos smaller than 30MB.
