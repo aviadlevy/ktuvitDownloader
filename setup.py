@@ -14,7 +14,7 @@ with io.open("ktuvitDownloader/__version__.py", "r") as f:
 
 setup(
         name="ktuvitDownloader",
-        version="0.1",
+        version=version,
         description="This package will allow you to auto-download subtitles from ktuvit.com website.",
         long_description=readme,
         url="https://github.com/aviadlevy/ktuvitDownloader/",

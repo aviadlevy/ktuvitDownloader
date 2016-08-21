@@ -53,6 +53,9 @@ def main():
                     print "Nothing to show"
                 else:
                     print text
+                    config.read(CONFIG_FILE)
+                    c_password = base64.b64decode(config.get("Login", "password"))
+                    print "Decoded password:", c_password
         exit(1)
 
     if not os.path.isfile(CONFIG_FILE):
