@@ -10,6 +10,10 @@ This is an Alpha version. use with caution.
 Install:
 ::
   pip install ktuvitDownloader
+  
+Upgrade:
+::
+  pip install ktuvitDownloader --upgrade
 
 Usage:
 ::
