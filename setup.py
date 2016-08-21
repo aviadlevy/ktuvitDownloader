@@ -12,11 +12,14 @@ with io.open(os.path.join(here, "README.rst"), encoding="utf-8") as f:
 with io.open("ktuvitDownloader/__version__.py", "r") as f:
     version = re.search(r"^__version__\s*=\s*[\"']([^\"']*)[\"']$", f.read(), re.MULTILINE).group(1)
 
+with io.open(os.path.join(here, 'CHANGELOG.rst'), encoding='utf-8') as f:
+    changelog = f.read()
+
 setup(
         name="ktuvitDownloader",
         version=version,
         description="This package will allow you to auto-download subtitles from ktuvit.com website.",
-        long_description=readme,
+        long_description=readme + "\n\n" + changelog,
         url="https://github.com/aviadlevy/ktuvitDownloader/",
         classifiers=["Development Status :: 3 - Alpha",
                      "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
