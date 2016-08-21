@@ -14,9 +14,19 @@ Install:
 Usage:
 ::
   ktuvitDownloader -h
+
+Run:
+::
+  ktuvitDownloader
   
+The "flow" is:
+- scan *"base"* directory, and **clean** any files smaller than 750KB, or videos smaller than 30MB.
+- search all video files on ktuvit.com and try to find best subtitle.
+- if we found a match, download and move the video+subtitle to the *"dest"* directory.
+
 TODO List:
 ---------
+- Imporve cleaning of the "dest" directory. Add argument to choose whether you want to clean or not.
 - Improve logging system
 - Improve subtitle detection
 - Create caching system
