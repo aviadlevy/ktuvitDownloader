@@ -43,6 +43,18 @@ def main():
                     print text
         exit(1)
 
+    if options.configuration:
+        if not os.path.isfile(CONFIG_FILE):
+            print "Nothing to show"
+        else:
+            with open(CONFIG_FILE, "r") as f:
+                text = f.read()
+                if not text:
+                    print "Nothing to show"
+                else:
+                    print text
+        exit(1)
+
     if not os.path.isfile(CONFIG_FILE):
         options.reset = True
 
