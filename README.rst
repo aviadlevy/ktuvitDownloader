@@ -20,6 +20,7 @@ Run:
   ktuvitDownloader
   
 The "flow" is:
+
 - scan *"base"* directory, and **clean** any files smaller than 750KB, or videos smaller than 30MB.
 - search all video files on ktuvit.com and try to find best subtitle.
 - if we found a match, download and move the video+subtitle to the *"dest"* directory.
