@@ -1,7 +1,19 @@
 ktuvitDownloader
 ================
+
+
 Auto-Download fron Ktuvit.com
 -----------------------------
+
+.. image:: http://img.shields.io/pypi/v/guessit.svg
+    :target: https://pypi.python.org/pypi/guessit
+    :alt: Latest Version
+
+
+.. image:: http://img.shields.io/badge/license-LGPLv3-blue.svg
+    :target: https://pypi.python.org/pypi/guessit
+    :alt: LGPLv3 License
+
 
 This package will allow you to auto-download subtitles from ktuvit.com website.
 
@@ -18,14 +30,14 @@ Upgrade
 -------
 
 Upgrade with `pip <http://www.pip-installer.org/>`_::
-  
+
     $ pip install ktuvitDownloader --upgrade
 
 Run
 ---
 
 Just run cmd (WinKey + R, then type *cmd* and Enter) then::
-  
+
     $ ktuvitDownloader
   
 
@@ -33,9 +45,8 @@ Usage
 -----
 
 Just run cmd (WinKey + R, then type *cmd* and Enter) then::
-  
-    $ ktuvitDownloader -h
 
+    $ ktuvitDownloader -h
 
 The "flow" is:
 
@@ -44,7 +55,7 @@ The "flow" is:
 - if we found a match, download and move the video+subtitle to the *"dest"* directory.
 
 TODO List:
----------
+----------
 - Imporve cleaning of the "dest" directory. Add argument to choose whether you want to clean or not.
 - Improve logging system
 - Improve subtitle detection
@@ -54,4 +65,6 @@ TODO List:
 :Author:
     Aviad Levy
 
-:Version: 0.0.1
+:Version: 0.0.1.1
+
+:License: `LGPLv3 license <http://www.gnu.org/licenses/lgpl.html>`_
