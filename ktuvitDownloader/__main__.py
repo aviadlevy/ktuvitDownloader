@@ -119,7 +119,7 @@ def main():
 
     for path, data in files.items():
         try:
-            vidExt = os.path.split(path)[1]
+            vidExt = os.path.splitext(path)[1]
             path = os.path.splitext(path)[0]
             subFile, subExt = con.download(path.split("\\")[-1], data)
             logging.info("Found " + path + "!")
