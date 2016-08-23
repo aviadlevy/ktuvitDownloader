@@ -60,11 +60,12 @@ TODO List:
 - Improve logging system
 - Improve subtitle detection
 - Create caching system
+- Some case that subtitle text is jibrish
 - Improve REASME.rst (this file)
 
 :Author:
     Aviad Levy
 
-:Version: 0.0.1.2
+:Version: 0.0.1.3
 
 :License: `LGPLv3 license <http://www.gnu.org/licenses/lgpl.html>`_

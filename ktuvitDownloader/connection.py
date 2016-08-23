@@ -107,7 +107,12 @@ class Connection(object):
         z = zipfile.ZipFile(StringIO.StringIO(subFileDownRes.content))
         for f in z.namelist():
             if os.path.splitext(f)[1] in SUB_EXT:
-                return z.read(f).replace("\r\n", "\n"), os.path.splitext(f)[1]
+                ret = z.read(f)
+                try:
+                    ret = ret.encode("utf-8").replace("\r\n", "\n")
+                except:
+                    ret = ret.replace("\r\n", "\n") 
+                return ret, os.path.splitext(f)[1]
 
     def downloadMovSub(self, data, urlSuff):
         urlSuffMatch = re.search("/tt1(\d+)/", urlSuff)
@@ -117,8 +122,6 @@ class Connection(object):
             raise Exception("Can't find this title: " + data["title"] + "\n")
 
         subDownloadPage = self.s.get(URL + URL_AJAX + "?moviedetailssubtitles=" + urlSuff)
-        with open("C:\\users\\win7\\desktop\\out1.html", "w") as f:
-            f.write(BeautifulSoup(subDownloadPage.text, "html.parser").prettify(encoding="utf-8"))
         return subDownloadPage
 
     def downloadEpSub(self, data, urlSuff):
@@ -134,8 +137,6 @@ class Connection(object):
                     data["episode"]) + " - for this title: " + data["title"])
 
         epRes = self.s.post(URL + URL_AJAX, params={"episodedetails": episodeId})
-        with open("C:\\users\\win7\\desktop\\out1.html", "w") as f:
-            f.write(BeautifulSoup(epRes.text, "html.parser").prettify(encoding="utf-8"))
         return epRes
 
     def close(self):
