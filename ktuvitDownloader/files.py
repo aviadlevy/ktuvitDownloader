@@ -4,6 +4,7 @@ import shutil
 from guessit import guessit
 
 from const import *
+from ktuvitDownloader.ProgressBar import ProgressBar
 
 
 def getPathsFiles(path):
@@ -53,7 +54,9 @@ def cleanEmptyDirs(path):
 
 def moveFinshed(paths, baseDir, destDir):
     isMoved = False
+    copied = 0
     for path in paths:
+        p = ProgressBar("Moving files")
         exts = (path[1], path[2])
         path = path[0]
         folderName = path.split("\\")[-2]
@@ -63,6 +66,8 @@ def moveFinshed(paths, baseDir, destDir):
         for ext in exts:
             shutil.copy(path + ext, os.path.join(os.path.join(destDir, folderName), fileName) + ext)
             os.remove(path + ext)
+            copied += 1
+            p.calculateAndUpdate(copied, len(paths) * 2)
             isMoved = True
     cleanEmptyDirs(baseDir)
     return isMoved

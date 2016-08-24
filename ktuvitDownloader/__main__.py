@@ -1,6 +1,7 @@
 import ConfigParser
 import base64
 import logging
+from logging import handlers
 import os
 from getpass import getpass
 
@@ -13,8 +14,12 @@ from ktuvitDownloader.options import args_parse
 
 config = ConfigParser.RawConfigParser()
 
-logging.basicConfig(filename=LOG_FILE, filemode="a", format="%(asctime)s\t%(levelname)s: %(message)s")
+handler = handlers.RotatingFileHandler(filename=LOG_FILE, mode="a", maxBytes=MB)
+handler.setFormatter(logging.Formatter(fmt="%(asctime)s\t%(levelname)s: %(message)s"))
 
+logger = logging.getLogger()
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 
 def main():
     """
@@ -112,29 +117,30 @@ def main():
         con.login()
     except WrongLoginException as e:
         print repr(e)
-        logging.error(repr(e))
+        logger.error(repr(e))
         exit(-1)
     except Exception as e:
-        logging.error(repr(e))
+        logger.error(repr(e))
 
     for path, data in files.items():
         try:
             vidExt = os.path.splitext(path)[1]
             path = os.path.splitext(path)[0]
             subFile, subExt = con.download(path.split("\\")[-1], data)
-            logging.info("Found " + path + "!")
+            logger.info("Found " + path + "!")
+            print "Found", path.split("\\")[-1]
             with open(path + subExt, "w") as f:
                 f.write(subFile)
             downloaded.append((path, subExt, vidExt))
         except CantFindSubtitleException as e:
-            logging.warn(e)
+            logger.warn(e)
         except Exception as e:
-            logging.error(repr(e))
+            logger.error(repr(e))
 
     try:
         con.close()
     except Exception as e:
-        logging.error(repr(e))
+        logger.error(repr(e))
 
     if moveFinshed(downloaded, base_dir, dest_dir):
         print "Done! check your Dest folder. you may find surprise\nTry again in a few hours, to prevent the chance " \
