@@ -61,7 +61,6 @@ TODO List:
 - Improve subtitle detection
 - Create caching system
 - Some case that subtitle text is jibrish
-- copy files, and then delete rather than just move them
 - Improve REASME.rst (this file)
 
 :Author:
