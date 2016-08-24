@@ -61,7 +61,8 @@ def moveFinshed(paths, baseDir, destDir):
         if not os.path.exists(os.path.join(destDir, folderName)):
             os.makedirs(os.path.join(destDir, folderName))
         for ext in exts:
-            shutil.move(path + ext, os.path.join(os.path.join(destDir, folderName), fileName) + ext)
+            shutil.copy(path + ext, os.path.join(os.path.join(destDir, folderName), fileName) + ext)
+            os.remove(path + ext)
             isMoved = True
     cleanEmptyDirs(baseDir)
     return isMoved
