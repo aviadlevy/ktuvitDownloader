@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import ConfigParser
 import base64
 import logging
@@ -9,23 +11,27 @@ from ktuvitDownloader.CustomExceptions import WrongLoginException, CantFindSubti
 from ktuvitDownloader.__version__ import __version__
 from ktuvitDownloader.connection import Connection
 from ktuvitDownloader.const import *
-from ktuvitDownloader.files import getPathsFiles, moveFinshed
+from ktuvitDownloader.files import get_paths_files, move_finshed
 from ktuvitDownloader.options import args_parse
 
 config = ConfigParser.RawConfigParser()
 
-handler = handlers.RotatingFileHandler(filename=LOG_FILE, mode="a", maxBytes=MB)
+handler = handlers.RotatingFileHandler(filename=LOG_FILE, maxBytes=MB)
 handler.setFormatter(logging.Formatter(fmt="%(asctime)s\t%(levelname)s: %(message)s"))
 
 logger = logging.getLogger()
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
+
 def main():
     """
     main function
     """
     options = args_parse.parse_args()
+
+    base_dir = ""
+    dest_dir = ""
 
     if options.version:
         print("+-------------------------------------------------------+")
@@ -40,7 +46,7 @@ def main():
         if not os.path.isfile(LOG_FILE):
             print "Nothing to show"
         else:
-            with open(LOG_FILE, "r") as f:
+            with open(LOG_FILE) as f:
                 text = f.read()
                 if not text:
                     print "Nothing to show"
@@ -52,7 +58,7 @@ def main():
         if not os.path.isfile(CONFIG_FILE):
             print "Nothing to show"
         else:
-            with open(CONFIG_FILE, "r") as f:
+            with open(CONFIG_FILE) as f:
                 text = f.read()
                 if not text:
                     print "Nothing to show"
@@ -107,7 +113,7 @@ def main():
     base_dir = config.get("Directories", "base_dir")
     dest_dir = config.get("Directories", "dest_dir")
 
-    files = getPathsFiles(base_dir)
+    files = get_paths_files(base_dir)
 
     downloaded = []
 
@@ -124,14 +130,14 @@ def main():
 
     for path, data in files.items():
         try:
-            vidExt = os.path.splitext(path)[1]
+            vid_ext = os.path.splitext(path)[1]
             path = os.path.splitext(path)[0]
-            subFile, subExt = con.download(path.split("\\")[-1], data)
+            sub_file, sub_ext = con.download(path.split("\\")[-1], data)
             logger.info("Found " + path + "!")
             print "Found", path.split("\\")[-1]
-            with open(path + subExt, "w") as f:
-                f.write(subFile)
-            downloaded.append((path, subExt, vidExt))
+            with open(path + sub_ext, "w") as f:
+                f.write(sub_file)
+            downloaded.append((path, sub_ext, vid_ext))
         except CantFindSubtitleException as e:
             logger.warn(e)
         except Exception as e:
@@ -142,7 +148,7 @@ def main():
     except Exception as e:
         logger.error(repr(e))
 
-    if moveFinshed(downloaded, base_dir, dest_dir):
+    if move_finshed(downloaded, base_dir, dest_dir):
         print "Done! check your Dest folder. you may find surprise\nTry again in a few hours, to prevent the chance " \
           "you'll get ban"
     else:

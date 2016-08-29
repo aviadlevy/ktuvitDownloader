@@ -1,4 +1,5 @@
-# coding=utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 URL = "http://www.ktuvit.com"
 URL_LOGIN = "/login.php"

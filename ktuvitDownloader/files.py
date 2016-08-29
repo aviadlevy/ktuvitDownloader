@@ -1,13 +1,15 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import os
 import shutil
 
 from guessit import guessit
 
 from const import *
-from ktuvitDownloader.ProgressBar import ProgressBar
+from ktuvitDownloader.progress_bar import ProgressBar
 
 
-def getPathsFiles(path):
+def get_paths_files(path):
     """
     return all the files under the path given
 
@@ -15,15 +17,15 @@ def getPathsFiles(path):
     :return: return all the files under the path given
     """
     files = []
-    for root, directories, filenames in os.walk(path):
-        for filename in filenames:
+    for root, directories, file_names in os.walk(path):
+        for filename in file_names:
             files.append(os.path.join(root, filename))
     vid_with_data = {}
     for f in files:
         ext = os.path.splitext(f)[1]
-        sizefile = os.path.getsize(f)
+        size_file = os.path.getsize(f)
         if ext in VIDEO_EXT:
-            if sizefile < 30 * MB or os.path.splitext(os.path.basename(f))[0] == "sample":
+            if size_file < 30 * MB or os.path.splitext(os.path.basename(f))[0] == "sample":
                 os.remove(f)
             else:
                 data = guessit(f)
@@ -40,34 +42,34 @@ def getPathsFiles(path):
         elif ext in SUB_EXT:
             continue
         else:
-            if sizefile < 750 * KB:
+            if size_file < 750 * KB:
                 os.remove(f)
-    cleanEmptyDirs(path)
+    clean_empty_dirs(path)
     return vid_with_data
 
 
-def cleanEmptyDirs(path):
+def clean_empty_dirs(path):
     for dir in [x[0] for x in os.walk(path)]:
         if not os.listdir(dir):
             os.rmdir(dir)
 
 
-def moveFinshed(paths, baseDir, destDir):
-    isMoved = False
+def move_finshed(paths, base_dir, dest_dir):
+    is_moved = False
     copied = 0
     for path in paths:
         p = ProgressBar("Moving files")
         exts = (path[1], path[2])
         path = path[0]
-        folderName = path.split("\\")[-2]
-        fileName = path.split("\\")[-1]
-        if not os.path.exists(os.path.join(destDir, folderName)):
-            os.makedirs(os.path.join(destDir, folderName))
+        folder_name = path.split("\\")[-2]
+        file_name = path.split("\\")[-1]
+        if not os.path.exists(os.path.join(dest_dir, folder_name)):
+            os.makedirs(os.path.join(dest_dir, folder_name))
         for ext in exts:
-            shutil.copy(path + ext, os.path.join(os.path.join(destDir, folderName), fileName) + ext)
+            shutil.copy(path + ext, os.path.join(os.path.join(dest_dir, folder_name), file_name) + ext)
             os.remove(path + ext)
             copied += 1
-            p.calculateAndUpdate(copied, len(paths) * 2)
-            isMoved = True
-    cleanEmptyDirs(baseDir)
-    return isMoved
+            p.calculate_and_update(copied, len(paths) * 2)
+            is_moved = True
+    clean_empty_dirs(base_dir)
+    return is_moved

@@ -1,11 +1,16 @@
 ChangeLog
 =========
 
+0.1.1.0 (2016-08-29)
+--------------------
+
+- Minor cosmetic changes
+
 0.0.1.4 (2016-08-24)
 --------------------
 
 - Added moving progress bar
-- Change moving to copy-delete. see .. _Issue #1: https://github.com/aviadlevy/ktuvitDownloader/issues/1
+- Change moving to copy-delete. see `Issue #1 <https://github.com/aviadlevy/ktuvitDownloader/issues/1>`_
 - Now logger is rotating (on 1MB)
 
 0.0.1.2-3 (2016-08-23)
