@@ -86,12 +86,27 @@ class Connection(object):
 
         try:
             html_sub_download = BeautifulSoup(sub_download_page.text, "html.parser")
-            sub_id = html_sub_download.find("div", title=full_title).parent.find_previous_sibling("tr").find("a")["name"]
+            sub_id = html_sub_download.find("div", title=full_title).parent.find_previous_sibling("tr").find("a")[
+                "name"]
+            try:
+                lang = html_sub_download.find("div", title=full_title).parent.find_previous("div").find_previous(
+                        "div").find("img")["title"].encode("utf-8")
+                if lang != "עברית":
+                    sub_id = None
+            except AttributeError:
+                pass
         except AttributeError:
             try:
                 html_sub_download = BeautifulSoup(sub_download_page.text, "html.parser")
                 sub_id = html_sub_download.find_all("div", title=lambda x: x and x.endswith(data["release_group"]))[
                     0].parent.find_previous_sibling("tr").find("a")["name"]
+                try:
+                    lang = html_sub_download.find_all("div", title=lambda x: x and x.endswith(data["release_group"]))[
+                        0].parent.find_previous("div").find_previous("div").find("img")["title"].encode("utf-8")
+                    if lang != "עברית":
+                        sub_id = None
+                except AttributeError:
+                    pass
             except (AttributeError, IndexError):
                 try:
                     html_sub_download = BeautifulSoup(sub_download_page.text, "html.parser")
@@ -99,7 +114,9 @@ class Connection(object):
                     for title in titles:
                         try:
                             sub_data = guessit(title["title"])
-                            if sub_data["format"] == data["format"] and sub_data["screen_size"] == data["screen_size"]:
+                            if sub_data["format"] == data["format"] and sub_data["screen_size"] == data[
+                                "screen_size"] and title.parent.find_previous("div").find_previous("div").find("img")[
+                                    "title"].encode("utf-8") == "עברית":
                                 sub_id = title.parent.find_previous_sibling("tr").find("a")["name"]
                                 break
                         except KeyError:

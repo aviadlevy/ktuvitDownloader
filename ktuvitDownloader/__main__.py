@@ -92,6 +92,13 @@ def main():
         while not os.path.isdir(base_dir):
             print "Can't find this directory."
             base_dir = raw_input("Try again: ")
+        try:
+            config.add_section("Directories")
+        except ConfigParser.DuplicateSectionError:
+            pass
+        config.set("Directories", "base_dir", base_dir)
+        with open(CONFIG_FILE, "wb") as f:
+            config.write(f)
 
     if options.dest_path:
         dest_dir = raw_input("Enter the path to dest directory (where you want to move your files. it can be the "
@@ -99,11 +106,10 @@ def main():
         while not os.path.isdir(dest_dir):
             print "Can't find this directory."
             dest_dir = raw_input("Try again: ")
-
-    if options.reset:
-        config.add_section("Directories")
-        config.set("Directories", "base_dir", base_dir)
-        config.set("Directories", "dest_dir", dest_dir)
+        try:
+            config.set("Directories", "dest_dir", dest_dir)
+        except ConfigParser.DuplicateSectionError:
+            pass
         with open(CONFIG_FILE, "wb") as f:
             config.write(f)
 
