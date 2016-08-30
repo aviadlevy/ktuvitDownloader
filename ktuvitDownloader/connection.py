@@ -5,6 +5,8 @@ import os
 import re
 import zipfile
 
+from guessit import guessit
+
 from const import *
 from ktuvitDownloader.CustomExceptions import *
 
@@ -80,6 +82,8 @@ class Connection(object):
         else:
             sub_download_page = self.download_mov_sub(data, url_suff)
 
+        sub_id = None
+
         try:
             html_sub_download = BeautifulSoup(sub_download_page.text, "html.parser")
             sub_id = html_sub_download.find("div", title=full_title).parent.find_previous_sibling("tr").find("a")["name"]
@@ -88,17 +92,28 @@ class Connection(object):
                 html_sub_download = BeautifulSoup(sub_download_page.text, "html.parser")
                 sub_id = html_sub_download.find_all("div", title=lambda x: x and x.endswith(data["release_group"]))[
                     0].parent.find_previous_sibling("tr").find("a")["name"]
-            except Exception:
-                # TODO: try to find another ways to find the sub_id
-                # this is probably mean that the subtitle not here yet
-                title = data["title"]
-                if data["type"] == "episode":
-                    title += "." + str(data["season"]) + "." + str(data["episode"])
-                raise CantFindSubtitleException("Can't find subtitle id - for this title: " + title)
+            except (AttributeError, IndexError):
+                try:
+                    html_sub_download = BeautifulSoup(sub_download_page.text, "html.parser")
+                    titles = html_sub_download.find_all("div")
+                    for title in titles:
+                        try:
+                            sub_data = guessit(title["title"])
+                            if sub_data["format"] == data["format"] and sub_data["screen_size"] == data["screen_size"]:
+                                sub_id = title.parent.find_previous_sibling("tr").find("a")["name"]
+                                break
+                        except KeyError:
+                            pass
+                except Exception:
+                    # this is probably mean that the subtitle not here yet
+                    sub_id = None
         except Exception as e:
             raise repr(e)
         if not sub_id:
-            raise Exception("id is empty")
+            title = data["title"]
+            if data["type"] == "episode":
+                title += "." + str(data["season"]) + "." + str(data["episode"])
+            raise CantFindSubtitleException("Can't find subtitle id - for this title: " + title)
 
         sub_file_down_res = self.s.get(URL + URL_DOWNLOAD, params={"id": sub_id}, stream=True)
         z = zipfile.ZipFile(StringIO.StringIO(sub_file_down_res.content))
@@ -137,4 +152,5 @@ class Connection(object):
         return ep_res
 
     def close(self):
+        self.s.get(URL + URL_LOGOUT)
         self.s.close()

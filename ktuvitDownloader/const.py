@@ -3,6 +3,7 @@
 
 URL = "http://www.ktuvit.com"
 URL_LOGIN = "/login.php"
+URL_LOGOUT = "/logout.php"
 URL_DOWNLOAD = "/downloadsubtitle.php"
 URL_AJAX = "/getajax.php"
 URL_SEARCH = "/browse.php?speechval=&q="
