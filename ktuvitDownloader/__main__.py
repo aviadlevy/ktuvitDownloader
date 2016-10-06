@@ -155,8 +155,8 @@ def main():
         logger.error(repr(e))
 
     if move_finshed(downloaded, base_dir, dest_dir):
-        print "Done! check your Dest folder. you may find surprise\nTry again in a few hours, to prevent the chance " \
-          "you'll get ban"
+        print "\n\nDone! check your Dest folder. you may find surprise\nTry again in a few hours, to prevent the " \
+              "chance you'll get ban"
     else:
         print "Done! try again in a few hours, to prevent the chance you'll get ban"
 

@@ -86,8 +86,15 @@ class Connection(object):
 
         try:
             html_sub_download = BeautifulSoup(sub_download_page.text, "html.parser")
-            sub_id = html_sub_download.find("div", title=full_title).parent.find_previous_sibling("tr").find("a")[
-                "name"]
+            try:
+                sub_id = html_sub_download.find("div", title=full_title).parent.find_previous_sibling("tr").find("a")[
+                    "name"]
+            except AttributeError:
+                reg_id = html_sub_download.find("div", title=full_title).parent.find_previous("tr").find("a")[
+                    "href"]
+                isMatch = re.match(r"/downloadsubtitle\.php\?id=(\d+)", reg_id)
+                if isMatch:
+                    sub_id = isMatch.group(1)
             try:
                 lang = html_sub_download.find("div", title=full_title).parent.find_previous("div").find_previous(
                         "div").find("img")["title"].encode("utf-8")

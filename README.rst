@@ -58,7 +58,6 @@ TODO List:
 ----------
 - Imporve cleaning of the "dest" directory. Add argument to choose whether you want to clean or not.
 - Improve logging system
-- Improve subtitle detection
 - Create caching system
 - Some case that subtitle text is jibrish
 - Improve REASME.rst (this file)
@@ -66,6 +65,6 @@ TODO List:
 :Author:
     Aviad Levy
 
-:Version: 0.2.0.1
+:Version: 0.2.0.2
 
 :License: `LGPLv3 license <http://www.gnu.org/licenses/lgpl.html>`_
