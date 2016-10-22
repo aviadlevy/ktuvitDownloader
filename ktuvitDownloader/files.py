@@ -22,6 +22,7 @@ def get_paths_files(path):
             files.append(os.path.join(root, filename))
     vid_with_data = {}
     for f in files:
+        file_name = os.path.splitext(f)[0]
         ext = os.path.splitext(f)[1]
         size_file = os.path.getsize(f)
         if ext in VIDEO_EXT:
@@ -40,7 +41,8 @@ def get_paths_files(path):
                 shutil.move(f, os.path.join(newPath, f.split("\\")[-1]))
                 vid_with_data[os.path.join(newPath, f.split("\\")[-1])] = guessit(f)
         elif ext in SUB_EXT:
-            continue
+            # This is probably mean that this is english sub, so delete
+            os.remove(f)
         else:
             if size_file < 750 * KB:
                 os.remove(f)

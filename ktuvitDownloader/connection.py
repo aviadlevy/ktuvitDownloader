@@ -48,6 +48,19 @@ def get_se_ep_id(num, html_to_parse, se_or_ep):
     return vid_id
 
 
+def get_id_with_reg(html_parsed):
+    reg_id = html_parsed.parent.find_previous("tr").find("a")["href"]
+    isMatch = re.match(r"/downloadsubtitle\.php\?id=(\d+)", reg_id)
+    if isMatch:
+        sub_id = isMatch.group(1)
+        return sub_id
+    return None
+
+
+def get_lang(html_parsed):
+    return html_parsed.parent.find_previous("div").find_previous("div").find("img")["title"].encode("utf-8")
+
+
 class Connection(object):
     def __init__(self, username, password):
         self.username = username
@@ -90,14 +103,9 @@ class Connection(object):
                 sub_id = html_sub_download.find("div", title=full_title).parent.find_previous_sibling("tr").find("a")[
                     "name"]
             except AttributeError:
-                reg_id = html_sub_download.find("div", title=full_title).parent.find_previous("tr").find("a")[
-                    "href"]
-                isMatch = re.match(r"/downloadsubtitle\.php\?id=(\d+)", reg_id)
-                if isMatch:
-                    sub_id = isMatch.group(1)
+                sub_id = get_id_with_reg(html_sub_download.find("div", title=full_title))
             try:
-                lang = html_sub_download.find("div", title=full_title).parent.find_previous("div").find_previous(
-                        "div").find("img")["title"].encode("utf-8")
+                lang = get_lang(html_sub_download.find("div", title=full_title))
                 if lang != "עברית":
                     sub_id = None
             except AttributeError:
@@ -105,11 +113,11 @@ class Connection(object):
         except AttributeError:
             try:
                 html_sub_download = BeautifulSoup(sub_download_page.text, "html.parser")
-                sub_id = html_sub_download.find_all("div", title=lambda x: x and x.endswith(data["release_group"]))[
-                    0].parent.find_previous_sibling("tr").find("a")["name"]
+                sub_id = get_id_with_reg(
+                        html_sub_download.find_all("div", title=lambda x: x and x.endswith(data["release_group"]))[0])
                 try:
-                    lang = html_sub_download.find_all("div", title=lambda x: x and x.endswith(data["release_group"]))[
-                        0].parent.find_previous("div").find_previous("div").find("img")["title"].encode("utf-8")
+                    lang = get_lang(html_sub_download.find_all(
+                            "div", title=lambda x: x and x.endswith(data["release_group"]))[0])
                     if lang != "עברית":
                         sub_id = None
                 except AttributeError:
@@ -121,11 +129,12 @@ class Connection(object):
                     for title in titles:
                         try:
                             sub_data = guessit(title["title"])
-                            if sub_data["format"] == data["format"] and sub_data["screen_size"] == data[
-                                "screen_size"] and title.parent.find_previous("div").find_previous("div").find("img")[
-                                    "title"].encode("utf-8") == "עברית":
-                                sub_id = title.parent.find_previous_sibling("tr").find("a")["name"]
-                                break
+                            if sub_data["format"] == data["format"] and (
+                                    sub_data["screen_size"] == data["screen_size"] or sub_data["video_codec"] == data[
+                                "video_codec"]) and get_lang(title) == "עברית":
+                                sub_id = get_id_with_reg(title)
+                                if sub_id:
+                                    break
                         except KeyError:
                             pass
                 except Exception:
@@ -169,8 +178,9 @@ class Connection(object):
         season_res = self.s.post(URL + URL_AJAX, params={"seasonid": season_id})
         episode_id = get_se_ep_id(data["episode"], season_res, "episodelink_")
         if not episode_id:
-            raise Exception("Can't find this episode: " + str(data["season"]) + "." + str(
-                    data["episode"]) + " - for this title: " + data["title"])
+            raise Exception(
+                "Can't find this episode: " + str(data["season"]) + "." + str(data["episode"]) + " - for this title: " +
+                data["title"])
 
         ep_res = self.s.post(URL + URL_AJAX, params={"episodedetails": episode_id})
         return ep_res

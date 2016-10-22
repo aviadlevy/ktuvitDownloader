@@ -3,6 +3,12 @@
 from argparse import ArgumentParser
 
 
+def parse_log(text):
+    last_date = text[-1][:10]
+    log = [x for x in text if x.startswith(last_date)]
+    return "".join(log)
+
+
 def get_args():
     """
     Builds the argument parser
@@ -25,7 +31,9 @@ def get_args():
     information_opts.add_argument("-v", "--version", dest="version", action="store_true", default=False,
                                   help="Display the package version.")
     information_opts.add_argument("-l", "--log", dest="show_log", action="store_true", default=False,
-                                  help="Display log")
+                                  help="Display short log")
+    information_opts.add_argument("-la", "--all-log", dest="show_all_log", action="store_true", default=False,
+                                  help="Display all log")
 
     return opts
 

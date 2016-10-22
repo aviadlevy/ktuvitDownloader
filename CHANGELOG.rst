@@ -1,6 +1,18 @@
 ChangeLog
 =========
 
+0.2.1.0 (2016-10-22)
+--------------------
+
+- Show less log on -l arg (only logs from last date used)
+- Add -la arg to show all log file
+
+0.2.0.3 (2016-10-20)
+--------------------
+
+- More ways to find subtitles
+- Now the tool will delete all subtitle on startup assuming they english subs
+
 0.2.0.2 (2016-10-06)
 --------------------
 

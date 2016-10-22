@@ -3,16 +3,16 @@
 import ConfigParser
 import base64
 import logging
-from logging import handlers
 import os
 from getpass import getpass
+from logging import handlers
 
-from ktuvitDownloader.CustomExceptions import WrongLoginException, CantFindSubtitleException
+from ktuvitDownloader.CustomExceptions import CantFindSubtitleException, WrongLoginException
 from ktuvitDownloader.__version__ import __version__
 from ktuvitDownloader.connection import Connection
 from ktuvitDownloader.const import *
 from ktuvitDownloader.files import get_paths_files, move_finshed
-from ktuvitDownloader.options import args_parse
+from ktuvitDownloader.options import args_parse, parse_log
 
 config = ConfigParser.RawConfigParser()
 
@@ -43,6 +43,18 @@ def main():
         exit(1)
 
     if options.show_log:
+        if not os.path.isfile(LOG_FILE):
+            print "Nothing to show"
+        else:
+            with open(LOG_FILE) as f:
+                text = f.readlines()
+                if not text:
+                    print "Nothing to show"
+                else:
+                    print parse_log(text)
+        exit(1)
+
+    if options.show_all_log:
         if not os.path.isfile(LOG_FILE):
             print "Nothing to show"
         else:
