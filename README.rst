@@ -2,16 +2,16 @@ ktuvitDownloader
 ================
 
 
-Auto-Download fron Ktuvit.com
+Auto-Download from Ktuvit.com
 -----------------------------
 
-.. image:: http://img.shields.io/pypi/v/guessit.svg
-    :target: https://pypi.python.org/pypi/guessit
+.. image:: http://img.shields.io/pypi/v/ktuvitDownloader.svg
+    :target: https://pypi.python.org/pypi/ktuvitDownloader
     :alt: Latest Version
 
 
 .. image:: http://img.shields.io/badge/license-LGPLv3-blue.svg
-    :target: https://pypi.python.org/pypi/guessit
+    :target: https://pypi.python.org/pypi/ktuvitDownloader
     :alt: LGPLv3 License
 
 
