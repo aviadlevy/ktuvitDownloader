@@ -7,6 +7,8 @@ import os
 from getpass import getpass
 from logging import handlers
 
+from guessit import guessit
+
 from ktuvitDownloader.CustomExceptions import CantFindSubtitleException, WrongLoginException
 from ktuvitDownloader.__version__ import __version__
 from ktuvitDownloader.connection import Connection
@@ -85,19 +87,29 @@ def main():
         options.reset = True
 
     if options.reset:
-        username = raw_input("Please enter you username (email) for <ktuvit.com>: ")
-        password = ""
-        while not password:
-            password = getpass("Please enter your password: ")
-            password1 = getpass("Please enter your password again: ")
-            if password != password1:
-                print "Can't confirm. let's try again."
-                password = ""
-        config.add_section("Login")
-        config.set("Login", "username", username)
-        config.set("Login", "password", base64.b64encode(password))
-        options.base_path = True
-        options.dest_path = True
+        get_login_credential()
+        if not options.specific:
+            options.base_path = True
+            options.dest_path = True
+
+    if options.specific:
+        base_dir = options.specific
+        if not os.path.isdir(base_dir):
+            ext = os.path.splitext(base_dir)[1]
+            if ext not in VIDEO_EXT:
+                print "The path you supplied  is not known video format.\nPlease try again."
+                exit(-1)
+            else:
+                file_name = base_dir.split("\\")[-1]
+                base_dir = os.path.dirname(os.path.realpath(base_dir))
+                dest_dir = os.path.abspath(os.path.join(base_dir, os.pardir))
+                config.read(CONFIG_FILE)
+                username = config.get("Login", "username")
+                password = base64.b64decode(config.get("Login", "password"))
+                downloader(base_dir, dest_dir, {os.path.join(base_dir, file_name): guessit(file_name)}, username,
+                           password)
+                exit(0)
+        dest_dir = os.path.abspath(os.path.join(base_dir, os.pardir))
 
     if options.base_path:
         base_dir = raw_input("Enter the path to base directory (where all your files are): ")
@@ -128,15 +140,18 @@ def main():
     config.read(CONFIG_FILE)
     username = config.get("Login", "username")
     password = base64.b64decode(config.get("Login", "password"))
-    base_dir = config.get("Directories", "base_dir")
-    dest_dir = config.get("Directories", "dest_dir")
+    if not options.specific:
+        base_dir = config.get("Directories", "base_dir")
+        dest_dir = config.get("Directories", "dest_dir")
 
-    files = get_paths_files(base_dir)
+    files = get_paths_files(base_dir, to_clean=not options.specific)
 
+    downloader(base_dir, dest_dir, files, username, password)
+
+
+def downloader(base_dir, dest_dir, files, username, password):
     downloaded = []
-
     con = Connection(username, password)
-
     try:
         con.login()
     except WrongLoginException as e:
@@ -145,7 +160,6 @@ def main():
         exit(-1)
     except Exception as e:
         logger.error(repr(e))
-
     for path, data in files.items():
         try:
             vid_ext = os.path.splitext(path)[1]
@@ -160,17 +174,29 @@ def main():
             logger.warn(e)
         except Exception as e:
             logger.error(repr(e))
-
     try:
         con.close()
     except Exception as e:
         logger.error(repr(e))
-
     if move_finshed(downloaded, base_dir, dest_dir):
         print "\n\nDone! check your Dest folder. you may find surprise\nTry again in a few hours, to prevent the " \
               "chance you'll get ban"
     else:
         print "Done! try again in a few hours, to prevent the chance you'll get ban"
+
+
+def get_login_credential():
+    username = raw_input("Please enter you username (email) for <ktuvit.com>: ")
+    password = ""
+    while not password:
+        password = getpass("Please enter your password: ")
+        password1 = getpass("Please enter your password again: ")
+        if password != password1:
+            print "Can't confirm. let's try again."
+            password = ""
+    config.add_section("Login")
+    config.set("Login", "username", username)
+    config.set("Login", "password", base64.b64encode(password))
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ from const import *
 from ktuvitDownloader.progress_bar import ProgressBar
 
 
-def get_paths_files(path):
+def get_paths_files(path, to_clean=True):
     """
     return all the files under the path given
 
@@ -27,26 +27,33 @@ def get_paths_files(path):
         size_file = os.path.getsize(f)
         if ext in VIDEO_EXT:
             if size_file < 30 * MB or os.path.splitext(os.path.basename(f))[0] == "sample":
-                os.remove(f)
+                if to_clean:
+                    os.remove(f)
             else:
                 data = guessit(f)
-                folderName = data["title"]
-                if "year" in data.keys():
-                    folderName += " - " + str(data["year"])
-                newPath = os.path.join(path, folderName)
-                try:
-                    os.makedirs(newPath)
-                except:
-                    pass
-                shutil.move(f, os.path.join(newPath, f.split("\\")[-1]))
-                vid_with_data[os.path.join(newPath, f.split("\\")[-1])] = guessit(f)
+                if to_clean:
+                    folderName = data["title"]
+                    if "year" in data.keys():
+                        folderName += " - " + str(data["year"])
+                    newPath = os.path.join(path, folderName)
+                    try:
+                        os.makedirs(newPath)
+                    except:
+                        pass
+                    shutil.move(f, os.path.join(newPath, f.split("\\")[-1]))
+                    vid_with_data[os.path.join(newPath, f.split("\\")[-1])] = guessit(f)
+                else:
+                    vid_with_data[f] = guessit(f)
         elif ext in SUB_EXT:
             # This is probably mean that this is english sub, so delete
-            os.remove(f)
+            if to_clean:
+                os.remove(f)
         else:
             if size_file < 750 * KB:
-                os.remove(f)
-    clean_empty_dirs(path)
+                if to_clean:
+                    os.remove(f)
+    if to_clean:
+        clean_empty_dirs(path)
     return vid_with_data
 
 
@@ -68,8 +75,11 @@ def move_finshed(paths, base_dir, dest_dir):
         if not os.path.exists(os.path.join(dest_dir, folder_name)):
             os.makedirs(os.path.join(dest_dir, folder_name))
         for ext in exts:
-            shutil.copy(path + ext, os.path.join(os.path.join(dest_dir, folder_name), file_name) + ext)
-            os.remove(path + ext)
+            try:
+                shutil.copy(path + ext, os.path.join(os.path.join(dest_dir, folder_name), file_name) + ext)
+                os.remove(path + ext)
+            except shutil.Error:
+                pass
             copied += 1
             p.calculate_and_update(copied, len(paths) * 2)
             is_moved = True

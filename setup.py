@@ -21,7 +21,7 @@ setup(
         description="This package will allow you to auto-download subtitles from ktuvit.com website.",
         long_description=readme + "\n\n" + changelog,
         url="https://github.com/aviadlevy/ktuvitDownloader/",
-        classifiers=["Development Status :: 3 - Alpha",
+        classifiers=["Development Status :: 5 - Production/Stable",
                      "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
                      "Operating System :: OS Independent",
                      "Intended Audience :: End Users/Desktop",

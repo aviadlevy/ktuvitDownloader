@@ -1,6 +1,12 @@
 ChangeLog
 =========
 
+0.2.1.0 (2016-10-25)
+--------------------
+
+- Add -s arg to download from specific location.
+  - you can give a specific file or specific directory, and you'll get only the sub file (without cleaning or moving)
+
 0.2.1.0 (2016-10-22)
 --------------------
 
