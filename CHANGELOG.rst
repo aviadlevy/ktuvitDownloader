@@ -1,11 +1,10 @@
 ChangeLog
 =========
 
-0.2.1.0 (2016-10-25)
+0.2.2.0 (2016-10-25)
 --------------------
 
-- Add -s arg to download from specific location. you can give a specific file or specific directory, and you'll get only the sub file (without cleaning or moving)
-python
+- Add -s arg to download from specific location. you can give a specific file or specific directory, and you'll get only the sub file (without cleaning or moving) python
 
 0.2.1.0 (2016-10-22)
 --------------------
