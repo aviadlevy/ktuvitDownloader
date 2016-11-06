@@ -15,7 +15,7 @@ Auto-Download from Ktuvit.com
     :alt: LGPLv3 License
 
 
-This package will allow you to auto-download subtitles from ktuvit.com website.
+This package will allow you to auto-download hebrew subtitles from the israeli site ktuvit.com website.
 
 This is an Alpha version. use with caution.
 
