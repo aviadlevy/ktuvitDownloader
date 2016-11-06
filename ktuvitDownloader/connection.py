@@ -6,6 +6,7 @@ import re
 import zipfile
 
 from guessit import guessit
+import yaml
 
 from const import *
 from ktuvitDownloader.CustomExceptions import *
@@ -18,14 +19,19 @@ except ImportError:
 import requests
 
 
-def find_best_url(all_url_suff, mov_type):
-    # find the first that match the type to our type
+def find_best_url(all_url_suff, mov_type, year):
+    best_option = None
     for url_suff in all_url_suff:
         if ("tvshow" in url_suff.find_next("img")["src"] and mov_type == "episode") or (
                         "movie" in url_suff.find_next("img")["src"] and mov_type == "movie"):
-            return url_suff["href"]
-    # TODO: need to enhanced this to really find the best one, and not just return the first
-    # TODO: IMDB?
+            if year and year == url_suff.find_next("span").text:
+                return url_suff["href"]
+            elif best_option:
+                continue
+            else:
+                best_option = url_suff["href"]
+    if best_option:
+        return best_option
     return all_url_suff[0]["href"]
 
 
@@ -66,6 +72,13 @@ class Connection(object):
         self.username = username
         self.password = password
         self.s = requests.Session()
+        self.cur_cache = {}
+        self.cache = {}
+        if os.path.exists(CACHING_FILE):
+            with open(CACHING_FILE) as f:
+                self.cache = yaml.load(f)
+                if not self.cache:
+                    self.cache = {}
 
     def login(self):
         r = self.s.post(URL + URL_LOGIN, {"email": self.username, "password": self.password, "Login": "התחבר"})
@@ -78,20 +91,31 @@ class Connection(object):
             raise WrongLoginException("Your username probably blocked. you need to register again.")
 
     def download(self, full_title, data):
-        login_res = self.s.get(URL + URL_SEARCH + data["title"])
+        key = data["title"]
+        if data["type"] == "episode":
+            key += "." + str(data["season"]) + "." + str(data["episode"])
+        self.cur_cache = self.cache.get(key, {})
+        if not self.cur_cache.get("url_suff"):
+            login_res = self.s.get(URL + URL_SEARCH + data["title"])
 
-        all_url_suff = BeautifulSoup(login_res.text, "html.parser").find_all("a", {"itemprop": "url"})
-        if len(all_url_suff) > 1:
-            # todo: find the best one
-            url_suff = find_best_url(all_url_suff, data["type"])
+            all_url_suff = BeautifulSoup(login_res.text, "html.parser").find_all("a", {"itemprop": "url"})
+            if len(all_url_suff) > 1:
+                # todo: find the best one
+                url_suff = find_best_url(all_url_suff, data["type"], data.get("year"))
+            else:
+                try:
+                    url_suff = all_url_suff[0]["href"]
+                except:
+                    raise Exception("Can't find this title: " + data["title"])
+            self.cur_cache["url_suff"] = url_suff
         else:
-            try:
-                url_suff = all_url_suff[0]["href"]
-            except:
-                raise Exception("Can't find this title: " + data["title"])
+            url_suff = self.cur_cache["url_suff"]
+
+        self.save_cache(key)
 
         if data["type"] == "episode":
             sub_download_page = self.download_ep_sub(data, url_suff)
+            self.save_cache(key)
         else:
             sub_download_page = self.download_mov_sub(data, url_suff)
 
@@ -170,21 +194,35 @@ class Connection(object):
         return sub_download_page
 
     def download_ep_sub(self, data, url_suff):
-        res_to_parse = self.s.get(URL + url_suff)
-        season_id = get_se_ep_id(data["season"], res_to_parse, "seasonlink_")
-        if not season_id:
-            raise Exception("Can't find this season: " + str(data["season"]) + " - for this title: " + data["title"])
+        if not self.cur_cache.get("season_id"):
+            res_to_parse = self.s.get(URL + url_suff)
+            season_id = get_se_ep_id(data["season"], res_to_parse, "seasonlink_")
+            if not season_id:
+                raise Exception("Can't find this season: " +
+                                str(data["season"]) + " - for this title: " + data["title"])
+            self.cur_cache["season_id"] = season_id
+        else:
+            season_id = self.cur_cache["season_id"]
 
-        season_res = self.s.post(URL + URL_AJAX, params={"seasonid": season_id})
-        episode_id = get_se_ep_id(data["episode"], season_res, "episodelink_")
-        if not episode_id:
-            raise Exception(
-                "Can't find this episode: " + str(data["season"]) + "." + str(data["episode"]) + " - for this title: " +
-                data["title"])
+        if not self.cur_cache.get("episode_id"):
+            season_res = self.s.post(URL + URL_AJAX, params={"seasonid": season_id})
+            episode_id = get_se_ep_id(data["episode"], season_res, "episodelink_")
+            if not episode_id:
+                raise Exception(
+                    "Can't find this episode: " + str(data["season"]) + "." +
+                    str(data["episode"]) + " - for this title: " + data["title"])
+            self.cur_cache["episode_id"] = episode_id
+        else:
+            episode_id = self.cur_cache["episode_id"]
 
         ep_res = self.s.post(URL + URL_AJAX, params={"episodedetails": episode_id})
         return ep_res
 
     def close(self):
+        with open(CACHING_FILE, "wb") as f:
+            yaml.dump(self.cache, f)
         self.s.get(URL + URL_LOGOUT)
         self.s.close()
+
+    def save_cache(self, key):
+        self.cache[key] = self.cur_cache

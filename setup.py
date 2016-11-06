@@ -36,6 +36,7 @@ setup(
             "guessit",
             "requests",
             "beautifulsoup4",
+            "pyyaml"
         ],
         entry_points={
             "console_scripts": [

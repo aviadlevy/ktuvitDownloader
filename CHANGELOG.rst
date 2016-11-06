@@ -1,6 +1,12 @@
 ChangeLog
 =========
 
+1.0.0 (2016-11-06)
+------------------
+
+- Caching is here! reduce the amount of API calls, and improve speed.
+- Added year to recognize the right title
+
 0.2.2.0 (2016-10-25)
 --------------------
 
