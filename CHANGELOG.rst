@@ -1,10 +1,18 @@
 ChangeLog
 =========
 
+1.0.1 (2016-11-09)
+------------------
+
+- Don't save caching on specific run
+- Don't save logs on specific run, instead print them to screen
+- Make sure the cache is not exploding. clear it from files we've found already
+- Cosmetic changes to the code
+
 1.0.0 (2016-11-06)
 ------------------
 
-- Caching is here! reduce the amount of API calls, and improve speed.
+- Caching is here! reduce the amount of API calls, and improve speed
 - Added year to recognize the right title
 
 0.2.2.0 (2016-10-25)

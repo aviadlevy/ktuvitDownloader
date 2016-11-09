@@ -79,6 +79,7 @@ class Connection(object):
                 self.cache = yaml.load(f)
                 if not self.cache:
                     self.cache = {}
+        self.in_cache = []
 
     def login(self):
         r = self.s.post(URL + URL_LOGIN, {"email": self.username, "password": self.password, "Login": "התחבר"})
@@ -218,11 +219,20 @@ class Connection(object):
         ep_res = self.s.post(URL + URL_AJAX, params={"episodedetails": episode_id})
         return ep_res
 
-    def close(self):
-        with open(CACHING_FILE, "wb") as f:
-            yaml.dump(self.cache, f)
+    def close(self, specific):
+        if not specific:
+            self.clear_cache()
+            with open(CACHING_FILE, "wb") as f:
+                yaml.dump(self.cache, f)
         self.s.get(URL + URL_LOGOUT)
         self.s.close()
 
+    def clear_cache(self):
+        for k in self.cache.keys():
+            if k not in self.in_cache:
+                self.cache.pop(k)
+
     def save_cache(self, key):
+        self.in_cache.append(key)
+        self.in_cache = list(set(self.in_cache))
         self.cache[key] = self.cur_cache

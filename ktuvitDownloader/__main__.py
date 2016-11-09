@@ -7,6 +7,7 @@ import os
 from getpass import getpass
 from logging import handlers
 
+import sys
 from guessit import guessit
 
 from ktuvitDownloader.CustomExceptions import CantFindSubtitleException, WrongLoginException
@@ -18,70 +19,35 @@ from ktuvitDownloader.options import args_parse, parse_log
 
 config = ConfigParser.RawConfigParser()
 
-handler = handlers.RotatingFileHandler(filename=LOG_FILE, maxBytes=MB)
-handler.setFormatter(logging.Formatter(fmt="%(asctime)s\t%(levelname)s: %(message)s"))
-
-logger = logging.getLogger()
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
-
 
 def main():
     """
     main function
     """
     options = args_parse.parse_args()
+    global logger
+    logger = logging.getLogger()
+    logger.addHandler(get_handler(not options.specific))
+    logger.setLevel(logging.INFO)
 
     base_dir = ""
     dest_dir = ""
 
     if options.version:
-        print("+-------------------------------------------------------+")
-        print("+               ktuvitDownloader " + __version__ + (23 - len(__version__)) * " " + "+")
-        print("+-------------------------------------------------------+")
-        print("|      Please report any bug or feature request at      |")
-        print("| https://github.com/aviadlevy/ktuvitDownloader/issues  |")
-        print("+-------------------------------------------------------+")
-        exit(1)
+        print_version()
+        exit(0)
 
     if options.show_log:
-        if not os.path.isfile(LOG_FILE):
-            print "Nothing to show"
-        else:
-            with open(LOG_FILE) as f:
-                text = f.readlines()
-                if not text:
-                    print "Nothing to show"
-                else:
-                    print parse_log(text)
-        exit(1)
+        print_log(isShort=True)
+        exit(0)
 
     if options.show_all_log:
-        if not os.path.isfile(LOG_FILE):
-            print "Nothing to show"
-        else:
-            with open(LOG_FILE) as f:
-                text = f.read()
-                if not text:
-                    print "Nothing to show"
-                else:
-                    print text
-        exit(1)
+        print_log(isShort=False)
+        exit(0)
 
     if options.configuration:
-        if not os.path.isfile(CONFIG_FILE):
-            print "Nothing to show"
-        else:
-            with open(CONFIG_FILE) as f:
-                text = f.read()
-                if not text:
-                    print "Nothing to show"
-                else:
-                    print text
-                    config.read(CONFIG_FILE)
-                    c_password = base64.b64decode(config.get("Login", "password"))
-                    print "Decoded password:", c_password
-        exit(1)
+        print_configuration()
+        exit(0)
 
     if not os.path.isfile(CONFIG_FILE):
         options.reset = True
@@ -107,7 +73,7 @@ def main():
                 username = config.get("Login", "username")
                 password = base64.b64decode(config.get("Login", "password"))
                 downloader(base_dir, dest_dir, {os.path.join(base_dir, file_name): guessit(file_name)}, username,
-                           password)
+                           password, specific=True)
                 exit(0)
         dest_dir = os.path.abspath(os.path.join(base_dir, os.pardir))
 
@@ -146,10 +112,60 @@ def main():
 
     files = get_paths_files(base_dir, to_clean=not options.specific)
 
-    downloader(base_dir, dest_dir, files, username, password)
+    downloader(base_dir, dest_dir, files, username, password, options.specific)
 
 
-def downloader(base_dir, dest_dir, files, username, password):
+def print_configuration():
+    if not os.path.isfile(CONFIG_FILE):
+        print "Nothing to show"
+    else:
+        with open(CONFIG_FILE) as f:
+            text = f.read()
+            if not text:
+                print "Nothing to show"
+            else:
+                print text
+                config.read(CONFIG_FILE)
+                c_password = base64.b64decode(config.get("Login", "password"))
+                print "Decoded password:", c_password
+
+
+def print_log(isShort):
+    if not os.path.isfile(LOG_FILE):
+        print "Nothing to show"
+    else:
+        with open(LOG_FILE) as f:
+            if isShort:
+                text = f.readlines()
+                text = parse_log(text)
+            else:
+                text = f.read()
+            if not text:
+                print "Nothing to show"
+            else:
+                print text
+
+
+def print_version():
+    print("+-------------------------------------------------------+")
+    print("+               ktuvitDownloader " + __version__ + (23 - len(__version__)) * " " + "+")
+    print("+-------------------------------------------------------+")
+    print("|      Please report any bug or feature request at      |")
+    print("| https://github.com/aviadlevy/ktuvitDownloader/issues  |")
+    print("+-------------------------------------------------------+")
+
+
+def get_handler(isFile):
+    formatter = logging.Formatter(fmt="%(asctime)s\t%(levelname)s: %(message)s")
+    if isFile:
+        handler = handlers.RotatingFileHandler(filename=LOG_FILE, maxBytes=MB)
+    else:
+        handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(formatter)
+    return handler
+
+
+def downloader(base_dir, dest_dir, files, username, password, specific=False):
     downloaded = []
     con = Connection(username, password)
     try:
@@ -175,7 +191,7 @@ def downloader(base_dir, dest_dir, files, username, password):
         except Exception as e:
             logger.error(repr(e))
     try:
-        con.close()
+        con.close(specific)
     except Exception as e:
         logger.error(repr(e))
     if move_finshed(downloaded, base_dir, dest_dir):
