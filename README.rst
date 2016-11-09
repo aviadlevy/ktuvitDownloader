@@ -19,6 +19,8 @@ This package will allow you to auto-download hebrew subtitles from the israeli s
 
 This is an Alpha version. use with caution.
 
+Hebrew video guide: `Click here <https://www.youtube.com/watch?v=vxPiKQtDaEA>`_
+
 Install
 -------
 
