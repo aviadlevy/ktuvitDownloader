@@ -1,6 +1,13 @@
 ChangeLog
 =========
 
+1.1.0 (2016-11-14)
+------------------
+
+- Major caching improvement
+- Minor detection improvement
+- Rename files when file name contains torrent group (interfere with release group detection)
+
 1.0.1 (2016-11-09)
 ------------------
 

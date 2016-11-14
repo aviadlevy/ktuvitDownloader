@@ -59,14 +59,11 @@ The "flow" is:
 TODO List:
 ----------
 - Imporve cleaning of the "dest" directory. Add argument to choose whether you want to clean or not.
-- *Improve logging system* **Done!**
-- *Create caching system* **Done!**
 - Some case that subtitle text is jibrish
-- Improve REASME.rst (this file)
 
 :Author:
     Aviad Levy
 
-:Version: 1.0.1
+:Version: 1.1.0
 
 :License: `LGPLv3 license <http://www.gnu.org/licenses/lgpl.html>`_

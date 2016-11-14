@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import StringIO
+import datetime
 import os
 import re
 import zipfile
 
-from guessit import guessit
 import yaml
+from guessit import guessit
 
 from const import *
 from ktuvitDownloader.CustomExceptions import *
@@ -96,12 +97,14 @@ class Connection(object):
         if data["type"] == "episode":
             key += "." + str(data["season"]) + "." + str(data["episode"])
         self.cur_cache = self.cache.get(key, {})
-        if not self.cur_cache.get("url_suff"):
+        url_suff = ""
+        if not self.cur_cache:
+            url_suff = self.get_similar_from_cache(key, 0).get("url_suff", "")
+        if not self.cur_cache.get("url_suff") and not url_suff:
             login_res = self.s.get(URL + URL_SEARCH + data["title"])
 
             all_url_suff = BeautifulSoup(login_res.text, "html.parser").find_all("a", {"itemprop": "url"})
             if len(all_url_suff) > 1:
-                # todo: find the best one
                 url_suff = find_best_url(all_url_suff, data["type"], data.get("year"))
             else:
                 try:
@@ -110,12 +113,15 @@ class Connection(object):
                     raise Exception("Can't find this title: " + data["title"])
             self.cur_cache["url_suff"] = url_suff
         else:
-            url_suff = self.cur_cache["url_suff"]
+            if not url_suff:
+                url_suff = self.cur_cache["url_suff"]
+            else:
+                self.cur_cache["url_suff"] = url_suff
 
         self.save_cache(key)
 
         if data["type"] == "episode":
-            sub_download_page = self.download_ep_sub(data, url_suff)
+            sub_download_page = self.download_ep_sub(data, url_suff, key)
             self.save_cache(key)
         else:
             sub_download_page = self.download_mov_sub(data, url_suff)
@@ -123,14 +129,15 @@ class Connection(object):
         sub_id = None
 
         try:
-            html_sub_download = BeautifulSoup(sub_download_page.text, "html.parser")
+            html_sub_download = BeautifulSoup(sub_download_page.text.lower(), "html.parser")
             try:
-                sub_id = html_sub_download.find("div", title=full_title).parent.find_previous_sibling("tr").find("a")[
-                    "name"]
+                sub_id = \
+                    html_sub_download.find("div", title=full_title.lower()).parent.find_previous_sibling("tr").find(
+                        "a")["name"]
             except AttributeError:
-                sub_id = get_id_with_reg(html_sub_download.find("div", title=full_title))
+                sub_id = get_id_with_reg(html_sub_download.find("div", title=full_title.lower()))
             try:
-                lang = get_lang(html_sub_download.find("div", title=full_title))
+                lang = get_lang(html_sub_download.find("div", title=full_title.lower()))
                 if lang != "עברית":
                     sub_id = None
             except AttributeError:
@@ -138,11 +145,11 @@ class Connection(object):
         except AttributeError:
             try:
                 html_sub_download = BeautifulSoup(sub_download_page.text, "html.parser")
-                sub_id = get_id_with_reg(
-                        html_sub_download.find_all("div", title=lambda x: x and x.endswith(data["release_group"]))[0])
+                sub_id = get_id_with_reg(html_sub_download.find_all("div", title=lambda x: x and x.lower().endswith(
+                        data["release_group"].lower()))[0])
                 try:
-                    lang = get_lang(html_sub_download.find_all(
-                            "div", title=lambda x: x and x.endswith(data["release_group"]))[0])
+                    lang = get_lang(html_sub_download.find_all("div", title=lambda x: x and x.lower().endswith(
+                            data["release_group"].lower()))[0])
                     if lang != "עברית":
                         sub_id = None
                 except AttributeError:
@@ -194,24 +201,27 @@ class Connection(object):
         sub_download_page = self.s.get(URL + URL_AJAX + "?moviedetailssubtitles=" + url_suff)
         return sub_download_page
 
-    def download_ep_sub(self, data, url_suff):
-        if not self.cur_cache.get("season_id"):
+    def download_ep_sub(self, data, url_suff, key):
+        season_id = self.get_similar_from_cache(key, 1).get("season_id", "")
+        if not self.cur_cache.get("season_id") and not season_id:
             res_to_parse = self.s.get(URL + url_suff)
             season_id = get_se_ep_id(data["season"], res_to_parse, "seasonlink_")
             if not season_id:
-                raise Exception("Can't find this season: " +
-                                str(data["season"]) + " - for this title: " + data["title"])
+                raise Exception(
+                        "Can't find this season: " + str(data["season"]) + " - for this title: " + data["title"])
             self.cur_cache["season_id"] = season_id
         else:
-            season_id = self.cur_cache["season_id"]
+            if not season_id:
+                season_id = self.cur_cache["season_id"]
+            else:
+                self.cur_cache["season_id"] = season_id
 
         if not self.cur_cache.get("episode_id"):
             season_res = self.s.post(URL + URL_AJAX, params={"seasonid": season_id})
             episode_id = get_se_ep_id(data["episode"], season_res, "episodelink_")
             if not episode_id:
-                raise Exception(
-                    "Can't find this episode: " + str(data["season"]) + "." +
-                    str(data["episode"]) + " - for this title: " + data["title"])
+                raise Exception("Can't find this episode: " + str(data["season"]) + "." + str(
+                        data["episode"]) + " - for this title: " + data["title"])
             self.cur_cache["episode_id"] = episode_id
         else:
             episode_id = self.cur_cache["episode_id"]
@@ -228,11 +238,21 @@ class Connection(object):
         self.s.close()
 
     def clear_cache(self):
-        for k in self.cache.keys():
-            if k not in self.in_cache:
+        for k, v in self.cache.items():
+            try:
+                if k not in self.in_cache and v["time_stamp"] < datetime.datetime.now() - datetime.timedelta(14):
+                    self.cache.pop(k)
+            except KeyError:
                 self.cache.pop(k)
 
     def save_cache(self, key):
         self.in_cache.append(key)
         self.in_cache = list(set(self.in_cache))
+        self.cur_cache["time_stamp"] = datetime.datetime.now()
         self.cache[key] = self.cur_cache
+
+    def get_similar_from_cache(self, key, level):
+        for k, v in self.cache.iteritems():
+            if ".".join(k.split(".")[:level + 1]) == ".".join(key.split(".")[:level + 1]):
+                return v
+        return {}

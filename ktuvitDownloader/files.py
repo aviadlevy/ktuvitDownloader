@@ -9,6 +9,11 @@ from const import *
 from ktuvitDownloader.progress_bar import ProgressBar
 
 
+def rreplace(s, old, new):
+    li = s.rsplit(old, 1)
+    return new.join(li)
+
+
 def get_paths_files(path, to_clean=True):
     """
     return all the files under the path given
@@ -23,6 +28,11 @@ def get_paths_files(path, to_clean=True):
     vid_with_data = {}
     for f in files:
         file_name = os.path.splitext(f)[0]
+        for torrent_group in TORRENTS_GROUPS:
+            if file_name.endswith(torrent_group):
+                os.rename(f, rreplace(f, torrent_group, ""))
+                f = rreplace(f, torrent_group, "")
+                break
         ext = os.path.splitext(f)[1]
         size_file = os.path.getsize(f)
         if ext in VIDEO_EXT:
