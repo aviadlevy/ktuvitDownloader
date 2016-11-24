@@ -69,14 +69,15 @@ def get_lang(html_parsed):
 
 
 class Connection(object):
-    def __init__(self, username, password):
+    def __init__(self, username, password, app_dir):
         self.username = username
         self.password = password
         self.s = requests.Session()
         self.cur_cache = {}
         self.cache = {}
-        if os.path.exists(CACHING_FILE):
-            with open(CACHING_FILE) as f:
+        self.cache_file = os.path.join(app_dir.user_data_dir, CACHING_FILE)
+        if os.path.exists(self.cache_file):
+            with open(self.cache_file) as f:
                 self.cache = yaml.load(f)
                 if not self.cache:
                     self.cache = {}
@@ -133,7 +134,7 @@ class Connection(object):
             try:
                 sub_id = \
                     html_sub_download.find("div", title=full_title.lower()).parent.find_previous_sibling("tr").find(
-                        "a")["name"]
+                            "a")["name"]
             except AttributeError:
                 sub_id = get_id_with_reg(html_sub_download.find("div", title=full_title.lower()))
             try:
@@ -162,8 +163,8 @@ class Connection(object):
                         try:
                             sub_data = guessit(title["title"])
                             if sub_data["format"] == data["format"] and (
-                                    sub_data["screen_size"] == data["screen_size"] or sub_data["video_codec"] == data[
-                                "video_codec"]) and get_lang(title) == "עברית":
+                                            sub_data["screen_size"] == data["screen_size"] or sub_data["video_codec"] ==
+                                        data["video_codec"]) and get_lang(title) == "עברית":
                                 sub_id = get_id_with_reg(title)
                                 if sub_id:
                                     break
@@ -232,7 +233,7 @@ class Connection(object):
     def close(self, specific):
         if not specific:
             self.clear_cache()
-            with open(CACHING_FILE, "wb") as f:
+            with open(self.cache_file, "wb") as f:
                 yaml.dump(self.cache, f)
         self.s.get(URL + URL_LOGOUT)
         self.s.close()
@@ -240,7 +241,8 @@ class Connection(object):
     def clear_cache(self):
         for k, v in self.cache.items():
             try:
-                if k not in self.in_cache and v["time_stamp"] < datetime.datetime.now() - datetime.timedelta(14):
+                if k not in self.in_cache and v["time_stamp"] < datetime.datetime.now() - datetime.timedelta(
+                        CACHE_DAYS):
                     self.cache.pop(k)
             except KeyError:
                 self.cache.pop(k)

@@ -28,14 +28,16 @@ def get_args():
                               help="Download to given file from specific location")
 
     information_opts = opts.add_argument_group("Information")
-    information_opts.add_argument("-c", "--configuration", dest="configuration", action="store_true", default=False,
-                                  help="Display configuration.")
-    information_opts.add_argument("-v", "--version", dest="version", action="store_true", default=False,
+    information_opts.add_argument("-c", "--configuration", dest="show_configuration", action="store_true",
+                                  default=False, help="Display configuration.")
+    information_opts.add_argument("-v", "--version", dest="show_version", action="store_true", default=False,
                                   help="Display the package version.")
     information_opts.add_argument("-l", "--log", dest="show_log", action="store_true", default=False,
                                   help="Display short log")
     information_opts.add_argument("-la", "--all-log", dest="show_all_log", action="store_true", default=False,
                                   help="Display all log")
+    information_opts.add_argument("-ca", "--cache", dest="show_cache", action="store_true", default=False,
+                                  help="Display cache")
 
     return opts
 

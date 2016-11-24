@@ -1,6 +1,14 @@
 ChangeLog
 =========
 
+1.2.0 (2016-11-24)
+------------------
+
+- Now all configuration/log/cache files will be saved on the common cache file
+- New argument to display cache
+- cache is now saved only for 8 days
+- Added more torrent groups
+
 1.1.0 (2016-11-14)
 ------------------
 

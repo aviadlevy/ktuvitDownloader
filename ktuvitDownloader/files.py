@@ -29,7 +29,7 @@ def get_paths_files(path, to_clean=True):
     for f in files:
         file_name = os.path.splitext(f)[0]
         for torrent_group in TORRENTS_GROUPS:
-            if file_name.endswith(torrent_group):
+            if file_name.lower().endswith(torrent_group.lower()):
                 os.rename(f, rreplace(f, torrent_group, ""))
                 f = rreplace(f, torrent_group, "")
                 break
