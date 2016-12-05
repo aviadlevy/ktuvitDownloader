@@ -134,7 +134,7 @@ class Connection(object):
             try:
                 sub_id = \
                     html_sub_download.find("div", title=full_title.lower()).parent.find_previous_sibling("tr").find(
-                            "a")["name"]
+                            "td", class_="subtitle_tab").find("a")["name"]
             except AttributeError:
                 sub_id = get_id_with_reg(html_sub_download.find("div", title=full_title.lower()))
             try:
