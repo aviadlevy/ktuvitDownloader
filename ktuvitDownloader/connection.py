@@ -2,15 +2,19 @@
 # -*- coding: utf-8 -*-
 import StringIO
 import datetime
+import time
 import os
 import re
 import zipfile
+import sys
 
 import yaml
 from guessit import guessit
+from selenium import webdriver
 
 from const import *
 from ktuvitDownloader.CustomExceptions import *
+from files import clear_data_dir
 
 try:
     from BeautifulSoup import BeautifulSoup
@@ -38,7 +42,7 @@ def find_best_url(all_url_suff, mov_type, year):
 
 def get_headers():
     return {
-        "Host":            "www.ktuvit.com", "Connection": "keep - alive", "Upgrade-Insecure-Requests": 1,
+        "Host":            "www.ktuvit.com", "Connection": "keep - alive", "Upgrade-Insecure-Requests": "1",
         "User-Agent":      "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) "
                            "Chrome/51.0.2704.103 Safari/537.36",
         "Accept":          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q =0.8",
@@ -70,9 +74,14 @@ def get_lang(html_parsed):
 
 class Connection(object):
     def __init__(self, username, password, app_dir):
+        self.app_dir_data = app_dir.user_data_dir
         self.username = username
         self.password = password
         self.s = requests.Session()
+        options = webdriver.ChromeOptions()
+        prefs = {"download.default_directory": self.app_dir_data}
+        options.add_experimental_option("prefs", prefs)
+        self.driver = webdriver.Chrome(chrome_options=options)
         self.cur_cache = {}
         self.cache = {}
         self.cache_file = os.path.join(app_dir.user_data_dir, CACHING_FILE)
@@ -84,14 +93,11 @@ class Connection(object):
         self.in_cache = []
 
     def login(self):
-        r = self.s.post(URL + URL_LOGIN, {"email": self.username, "password": self.password, "Login": "התחבר"})
-
-        if LOGIN_ERROR in r.text.encode("utf-8"):
-            raise WrongLoginException("Wrong username or password. "
-                                      "please run \"ktuvitDownloader -r\" in order to "
-                                      "reset the username and password you entered")
-        if LOGIN_BLOCKED in r.text.encode("utf-8"):
-            raise WrongLoginException("Your username probably blocked. you need to register again.")
+        print "Please use the opened browser to login."
+        self.driver.get(URL + URL_LOGIN)
+        self.driver.find_element_by_id("email").send_keys(self.username)
+        self.driver.find_element_by_id("password").send_keys(self.password)
+        raw_input("Press Enter to continue...")
 
     def download(self, full_title, data):
         key = data["title"]
@@ -130,11 +136,11 @@ class Connection(object):
         sub_id = None
 
         try:
-            html_sub_download = BeautifulSoup(sub_download_page.text.lower(), "html.parser")
+            html_sub_download = BeautifulSoup(sub_download_page.lower(), "html.parser")
             try:
-                sub_id = \
-                    html_sub_download.find("div", title=full_title.lower()).parent.find_previous_sibling("tr").find(
-                            "td", class_="subtitle_tab").find("a")["name"]
+                    sub_id = \
+                        html_sub_download.find("div", title=full_title.lower()).parent.find_previous_sibling("tr").find(
+                                "td", class_="subtitle_tab").find("a")["name"]
             except AttributeError:
                 sub_id = get_id_with_reg(html_sub_download.find("div", title=full_title.lower()))
             try:
@@ -145,7 +151,7 @@ class Connection(object):
                 pass
         except AttributeError:
             try:
-                html_sub_download = BeautifulSoup(sub_download_page.text, "html.parser")
+                html_sub_download = BeautifulSoup(sub_download_page, "html.parser")
                 sub_id = get_id_with_reg(html_sub_download.find_all("div", title=lambda x: x and x.lower().endswith(
                         data["release_group"].lower()))[0])
                 try:
@@ -157,7 +163,7 @@ class Connection(object):
                     pass
             except (AttributeError, IndexError):
                 try:
-                    html_sub_download = BeautifulSoup(sub_download_page.text, "html.parser")
+                    html_sub_download = BeautifulSoup(sub_download_page, "html.parser")
                     titles = html_sub_download.find_all("div")
                     for title in titles:
                         try:
@@ -181,8 +187,12 @@ class Connection(object):
                 title += "." + str(data["season"]) + "." + str(data["episode"])
             raise CantFindSubtitleException("Can't find subtitle id - for this title: " + title)
 
-        sub_file_down_res = self.s.get(URL + URL_DOWNLOAD, params={"id": sub_id}, stream=True)
-        z = zipfile.ZipFile(StringIO.StringIO(sub_file_down_res.content))
+        # sub_file_down_res = self.s.get(URL + URL_DOWNLOAD, params={"id": sub_id}, stream=True)
+        self.driver.get(URL + URL_DOWNLOAD + "?id=" + sub_id)
+        time.sleep(2)
+        sub_file_down_res_path = max([os.path.join(self.app_dir_data, f) for f in os.listdir(self.app_dir_data)],
+                                     key=os.path.getctime)
+        z = zipfile.ZipFile(sub_file_down_res_path)
         for f in z.namelist():
             if os.path.splitext(f)[1] in SUB_EXT:
                 ret = z.read(f)
@@ -199,8 +209,9 @@ class Connection(object):
         else:
             raise Exception("Can't find this title: " + data["title"] + "\n")
 
-        sub_download_page = self.s.get(URL + URL_AJAX + "?moviedetailssubtitles=" + url_suff)
-        return sub_download_page
+        # sub_download_page = self.s.post(URL + URL_AJAX, params={"moviedetailssubtitles": url_suff})
+        self.driver.get(URL + URL_AJAX + "?moviedetailssubtitles=" + url_suff)
+        return self.driver.page_source
 
     def download_ep_sub(self, data, url_suff, key):
         season_id = self.get_similar_from_cache(key, 1).get("season_id", "")
@@ -227,16 +238,19 @@ class Connection(object):
         else:
             episode_id = self.cur_cache["episode_id"]
 
-        ep_res = self.s.post(URL + URL_AJAX, params={"episodedetails": episode_id})
-        return ep_res
+        # ep_res = self.s.post(URL + URL_AJAX, params={"episodedetails": episode_id})
+        self.driver.get(URL + URL_AJAX + "?episodedetails=" + episode_id)
+        return self.driver.page_source
 
     def close(self, specific):
         if not specific:
             self.clear_cache()
             with open(self.cache_file, "wb") as f:
                 yaml.dump(self.cache, f)
-        self.s.get(URL + URL_LOGOUT)
+        self.driver.get(URL + URL_LOGOUT)
         self.s.close()
+        self.driver.close()
+        clear_data_dir(self.app_dir_data)
 
     def clear_cache(self):
         for k, v in self.cache.items():

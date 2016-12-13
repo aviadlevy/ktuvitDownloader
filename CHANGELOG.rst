@@ -1,6 +1,11 @@
 ChangeLog
 =========
 
+2.0.0 (2016-12-13)
+------------------
+
+- Ktuvit.com now using captcha, so I added selenium to let the user login by itself
+
 1.2.1 (2016-12-05)
 ------------------
 

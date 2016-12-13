@@ -37,7 +37,9 @@ setup(
             "requests",
             "beautifulsoup4",
             "pyyaml",
-            "appdirs"
+            "appdirs",
+            "chromedriver_installer",
+            "selenium"
         ],
         entry_points={
             "console_scripts": [

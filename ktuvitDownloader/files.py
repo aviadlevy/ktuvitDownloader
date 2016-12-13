@@ -67,6 +67,17 @@ def get_paths_files(path, to_clean=True):
     return vid_with_data
 
 
+def clear_data_dir(path):
+    files = []
+    for root, directories, file_names in os.walk(path):
+        for filename in file_names:
+            files.append(os.path.join(root, filename))
+    for f in files:
+        ext = os.path.splitext(f)[1]
+        if ext == ".zip":
+            os.remove(f)
+
+
 def clean_empty_dirs(path):
     for dir in [x[0] for x in os.walk(path)]:
         if not os.listdir(dir):
