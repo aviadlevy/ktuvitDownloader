@@ -64,6 +64,6 @@ TODO List:
 :Author:
     Aviad Levy
 
-:Version: 2.0.0
+:Version: 2.0.1
 
 :License: `LGPLv3 license <http://www.gnu.org/licenses/lgpl.html>`_

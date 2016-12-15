@@ -95,8 +95,14 @@ class Connection(object):
     def login(self):
         print "Please use the opened browser to login."
         self.driver.get(URL + URL_LOGIN)
+        # fill the username and pass
         self.driver.find_element_by_id("email").send_keys(self.username)
         self.driver.find_element_by_id("password").send_keys(self.password)
+        # focus on the captcha box
+        try:
+            self.driver.find_element_by_id("recaptcha_response_field").send_keys("")
+        except:
+            pass
         raw_input("Press Enter to continue...")
 
     def download(self, full_title, data):
@@ -159,9 +165,9 @@ class Connection(object):
                             data["release_group"].lower()))[0])
                     if lang != "עברית":
                         sub_id = None
-                except AttributeError:
+                except (AttributeError):
                     pass
-            except (AttributeError, IndexError):
+            except (AttributeError, IndexError, KeyError):
                 try:
                     html_sub_download = BeautifulSoup(sub_download_page, "html.parser")
                     titles = html_sub_download.find_all("div")
@@ -169,8 +175,9 @@ class Connection(object):
                         try:
                             sub_data = guessit(title["title"])
                             if sub_data["format"] == data["format"] and (
-                                            sub_data["screen_size"] == data["screen_size"] or sub_data["video_codec"] ==
-                                        data["video_codec"]) and get_lang(title) == "עברית":
+                                            sub_data.get("screen_size") == data.get("screen_size") or
+                                            sub_data["video_codec"] == data["video_codec"]) and get_lang(title) == \
+                                    "עברית":
                                 sub_id = get_id_with_reg(title)
                                 if sub_id:
                                     break
