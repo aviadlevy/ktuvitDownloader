@@ -1,20 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import StringIO
 import datetime
-import time
 import os
 import re
+import time
 import zipfile
-import sys
 
 import yaml
 from guessit import guessit
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 from const import *
-from ktuvitDownloader.CustomExceptions import *
 from files import clear_data_dir
+from ktuvitDownloader.CustomExceptions import *
 
 try:
     from BeautifulSoup import BeautifulSoup
@@ -144,9 +145,9 @@ class Connection(object):
         try:
             html_sub_download = BeautifulSoup(sub_download_page.lower(), "html.parser")
             try:
-                    sub_id = \
-                        html_sub_download.find("div", title=full_title.lower()).parent.find_previous_sibling("tr").find(
-                                "td", class_="subtitle_tab").find("a")["name"]
+                sub_id = \
+                    html_sub_download.find("div", title=full_title.lower()).parent.find_previous_sibling("tr").find(
+                            "td", class_="subtitle_tab").find("a")["name"]
             except AttributeError:
                 sub_id = get_id_with_reg(html_sub_download.find("div", title=full_title.lower()))
             try:
@@ -175,9 +176,8 @@ class Connection(object):
                         try:
                             sub_data = guessit(title["title"])
                             if sub_data["format"] == data["format"] and (
-                                            sub_data.get("screen_size") == data.get("screen_size") or
-                                            sub_data["video_codec"] == data["video_codec"]) and get_lang(title) == \
-                                    "עברית":
+                                            sub_data.get("screen_size") == data.get("screen_size") or sub_data[
+                                        "video_codec"] == data["video_codec"]) and get_lang(title) == "עברית":
                                 sub_id = get_id_with_reg(title)
                                 if sub_id:
                                     break
@@ -218,6 +218,11 @@ class Connection(object):
 
         # sub_download_page = self.s.post(URL + URL_AJAX, params={"moviedetailssubtitles": url_suff})
         self.driver.get(URL + URL_AJAX + "?moviedetailssubtitles=" + url_suff)
+        try:
+            WebDriverWait(self.driver, timeout=5).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, "g-res-menu-section")))
+        except:
+            pass
         return self.driver.page_source
 
     def download_ep_sub(self, data, url_suff, key):
@@ -247,6 +252,11 @@ class Connection(object):
 
         # ep_res = self.s.post(URL + URL_AJAX, params={"episodedetails": episode_id})
         self.driver.get(URL + URL_AJAX + "?episodedetails=" + episode_id)
+        try:
+            WebDriverWait(self.driver, timeout=5).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, "g-res-menu-section")))
+        except:
+            pass
         return self.driver.page_source
 
     def close(self, specific):

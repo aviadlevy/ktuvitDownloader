@@ -5,12 +5,11 @@ import base64
 import json
 import logging
 import os
+import sys
+from datetime import datetime
 from getpass import getpass
 from logging import handlers
 
-import sys
-
-from datetime import datetime
 import yaml
 from appdirs import AppDirs
 from guessit import guessit
@@ -21,7 +20,6 @@ from ktuvitDownloader.connection import Connection
 from ktuvitDownloader.const import *
 from ktuvitDownloader.files import get_paths_files, move_finshed
 from ktuvitDownloader.options import args_parse, parse_log
-
 
 config = ConfigParser.RawConfigParser()
 app_dir = AppDirs("ktuvitdownloader")
