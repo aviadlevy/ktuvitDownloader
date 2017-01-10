@@ -55,8 +55,11 @@ def get_se_ep_id(num, html_to_parse, se_or_ep):
     vid_id = ""
     ids = BeautifulSoup(html_to_parse.text, "html.parser").find_all("a", id=lambda x: x and x.startswith(se_or_ep))
     for i in ids:
-        if int(i.text) == num:
-            vid_id = i["id"]
+        try:
+            if int(i.text) == num:
+                vid_id = i["id"]
+        except UnicodeEncodeError:
+            pass
     return vid_id
 
 
@@ -218,11 +221,12 @@ class Connection(object):
 
         # sub_download_page = self.s.post(URL + URL_AJAX, params={"moviedetailssubtitles": url_suff})
         self.driver.get(URL + URL_AJAX + "?moviedetailssubtitles=" + url_suff)
-        try:
-            WebDriverWait(self.driver, timeout=5).until(
-                    EC.presence_of_element_located((By.CLASS_NAME, "g-res-menu-section")))
-        except:
-            pass
+        # TODO: find something else
+        # try:
+        #     WebDriverWait(self.driver, timeout=5).until(
+        #             EC.presence_of_element_located((By.CLASS_NAME, "no_underline")))
+        # except:
+        #     pass
         return self.driver.page_source
 
     def download_ep_sub(self, data, url_suff, key):
