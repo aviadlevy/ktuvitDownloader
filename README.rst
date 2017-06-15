@@ -17,7 +17,10 @@ Auto-Download from Ktuvit.com
 
 This package will allow you to auto-download hebrew subtitles from the israeli site ktuvit.com website.
 
-This is an Alpha version. use with caution.
+NOTE:
+-----
+
+(15/06/17): Ktuvit don't work anymore. :(
 
 Hebrew video guide: `Click here <https://www.youtube.com/watch?v=vxPiKQtDaEA>`_
 
@@ -64,6 +67,6 @@ TODO List:
 :Author:
     Aviad Levy
 
-:Version: 2.0.4
+:Version: 2.0.5
 
 :License: `LGPLv3 license <http://www.gnu.org/licenses/lgpl.html>`_

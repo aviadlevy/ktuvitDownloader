@@ -9,6 +9,7 @@ import sys
 from datetime import datetime
 from getpass import getpass
 from logging import handlers
+from time import sleep
 
 import yaml
 from appdirs import AppDirs
@@ -124,6 +125,11 @@ def main():
         dest_dir = config.get("Directories", "dest_dir")
 
     files = get_paths_files(base_dir, to_clean=not options.specific)
+
+    if options.organize:
+        print "Goodbye..."
+        sleep(2)
+        exit(1)
 
     downloader(base_dir, dest_dir, files, username, password, options.specific)
 

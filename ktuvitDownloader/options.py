@@ -26,6 +26,8 @@ def get_args():
                               help="Change the base dir of your videos.")
     settings_opt.add_argument("-s", "--specific-location", type=str, dest="specific",
                               help="Download to given file from specific location")
+    settings_opt.add_argument("-o", "--organize", action="store_true", default=False, dest="organize",
+                              help="Organize your library only")
 
     information_opts = opts.add_argument_group("Information")
     information_opts.add_argument("-c", "--configuration", dest="show_configuration", action="store_true",

@@ -1,6 +1,12 @@
 ChangeLog
 =========
 
+2.0.5 (2017-06-15)
+------------------
+
+- NOTE: Ktuvit stopped working (redirect to sratim.co.il)
+- Added -o argument to only organize you base folder
+
 2.0.4 (2017-01-10)
 ------------------
 
