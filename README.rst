@@ -1,6 +1,8 @@
 ktuvitDownloader
 ================
 
+NOTE: (15/06/17): Ktuvit don't work for now. :(
+-----------------------------------------------
 
 Auto-Download from Ktuvit.com
 -----------------------------
@@ -17,10 +19,6 @@ Auto-Download from Ktuvit.com
 
 This package will allow you to auto-download hebrew subtitles from the israeli site ktuvit.com website.
 
-NOTE:
------
-
-(15/06/17): Ktuvit don't work anymore. :(
 
 Hebrew video guide: `Click here <https://www.youtube.com/watch?v=vxPiKQtDaEA>`_
 
@@ -62,6 +60,7 @@ The "flow" is:
 TODO List:
 ----------
 - Imporve cleaning of the "dest" directory. Add argument to choose whether you want to clean or not.
+- add linux support
 - Some case that subtitle text is jibrish
 
 :Author:
