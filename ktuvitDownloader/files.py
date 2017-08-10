@@ -89,7 +89,7 @@ def move_finshed(paths, base_dir, dest_dir):
     copied = 0
     for path in paths:
         p = ProgressBar("Moving files")
-        exts = (path[1], path[2])
+        exts = (path[1], ".srt", ".sub")
         path = path[0]
         folder_name = path.split("\\")[-2]
         file_name = path.split("\\")[-1]
@@ -101,6 +101,8 @@ def move_finshed(paths, base_dir, dest_dir):
                 os.remove(path + ext)
             except shutil.Error:
                 pass
+            except IOError:
+                copied -= 1
             copied += 1
             p.calculate_and_update(copied, len(paths) * 2)
             is_moved = True

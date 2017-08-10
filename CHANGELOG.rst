@@ -1,6 +1,12 @@
 ChangeLog
 =========
 
+3.0.0 (2017-08-11)
+------------------
+
+- download subtitles using "subliminal" package.
+  - NOTE: sometime the subtitles are machine translated. I'll try to recognize it in advance and not download such subtitles
+
 2.0.5 (2017-06-15)
 ------------------
 

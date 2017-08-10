@@ -4,6 +4,10 @@ ktuvitDownloader
 NOTE: (15/06/17): Ktuvit don't work for now. :(
 -----------------------------------------------
 
+NOTE: (11/08/17): Using Opensubtitles with subliminal
+-----------------------------------------------------
+
+
 Auto-Download from Ktuvit.com
 -----------------------------
 
@@ -66,6 +70,6 @@ TODO List:
 :Author:
     Aviad Levy
 
-:Version: 2.0.5
+:Version: 3.0.0
 
 :License: `LGPLv3 license <http://www.gnu.org/licenses/lgpl.html>`_

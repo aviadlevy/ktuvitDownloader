@@ -33,13 +33,8 @@ setup(
         license="LGPLv3",
         packages=["ktuvitDownloader"],
         install_requires=[
-            "guessit",
-            "requests",
-            "beautifulsoup4",
-            "pyyaml",
             "appdirs",
-            "chromedriver_installer",
-            "selenium"
+            "subliminal"
         ],
         entry_points={
             "console_scripts": [

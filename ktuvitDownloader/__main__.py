@@ -67,7 +67,6 @@ def main():
         options.reset = True
 
     if options.reset:
-        get_login_credential()
         if not options.specific:
             options.base_path = True
             options.dest_path = True
@@ -84,10 +83,7 @@ def main():
                 base_dir = os.path.dirname(os.path.realpath(base_dir))
                 dest_dir = os.path.abspath(os.path.join(base_dir, os.pardir))
                 config.read(config_file)
-                username = config.get("Login", "username")
-                password = base64.b64decode(config.get("Login", "password"))
-                downloader(base_dir, dest_dir, {os.path.join(base_dir, file_name): guessit(file_name)}, username,
-                           password, specific=True)
+                downloader(base_dir, dest_dir, {os.path.join(base_dir, file_name): guessit(file_name)}, specific=True)
                 exit(0)
         dest_dir = os.path.abspath(os.path.join(base_dir, os.pardir))
 
@@ -118,8 +114,6 @@ def main():
             config.write(f)
 
     config.read(config_file)
-    username = config.get("Login", "username")
-    password = base64.b64decode(config.get("Login", "password"))
     if not options.specific:
         base_dir = config.get("Directories", "base_dir")
         dest_dir = config.get("Directories", "dest_dir")
@@ -131,7 +125,7 @@ def main():
         sleep(2)
         exit(1)
 
-    downloader(base_dir, dest_dir, files, username, password, options.specific)
+    downloader(base_dir, dest_dir, files, options.specific)
 
 
 def check_user_data_dir():
@@ -208,54 +202,26 @@ def get_handler(isFile):
     return handler
 
 
-def downloader(base_dir, dest_dir, files, username, password, specific=False):
+def downloader(base_dir, dest_dir, files, specific=False):
     downloaded = []
-    con = Connection(username, password, app_dir)
-    try:
-        con.login()
-    except WrongLoginException as e:
-        print repr(e)
-        logger.error(repr(e))
-        exit(-1)
-    except Exception as e:
-        logger.error(repr(e))
+    con = Connection(app_dir)
     for path, data in files.items():
         try:
             vid_ext = os.path.splitext(path)[1]
-            path = os.path.splitext(path)[0]
-            sub_file, sub_ext = con.download(path.split("\\")[-1], data)
-            logger.info("Found " + path + "!")
-            print "Found", path.split("\\")[-1]
-            with open(path + sub_ext, "w") as f:
-                f.write(sub_file)
-            downloaded.append((path, sub_ext, vid_ext))
+            generic_path = os.path.splitext(path)[0]
+            con.download(path)
+            logger.info("Found " + generic_path + "!")
+            print "Found", generic_path.split("\\")[-1]
+            downloaded.append((generic_path, vid_ext))
         except CantFindSubtitleException as e:
             logger.warn(e)
         except Exception as e:
             logger.error(repr(e))
-    try:
-        con.close(specific)
-    except Exception as e:
-        logger.error(repr(e))
     if move_finshed(downloaded, base_dir, dest_dir):
         print "\n\nDone! check your Dest folder. you may find surprise\nTry again in a few hours, to prevent the " \
               "chance you'll get ban"
     else:
         print "Done! try again in a few hours, to prevent the chance you'll get ban"
-
-
-def get_login_credential():
-    username = raw_input("Please enter you username (email) for <ktuvit.com>: ")
-    password = ""
-    while not password:
-        password = getpass("Please enter your password: ")
-        password1 = getpass("Please enter your password again: ")
-        if password != password1:
-            print "Can't confirm. let's try again."
-            password = ""
-    config.add_section("Login")
-    config.set("Login", "username", username)
-    config.set("Login", "password", base64.b64encode(password))
 
 
 if __name__ == "__main__":

@@ -1,295 +1,34 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import datetime
 import os
-import re
-import time
-import zipfile
 
-import yaml
-from guessit import guessit
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
-
-from const import *
-from files import clear_data_dir
-from ktuvitDownloader.CustomExceptions import *
+from babelfish import Language
+from subliminal import download_best_subtitles, region, save_subtitles, scan_video
 
 try:
     from BeautifulSoup import BeautifulSoup
 except ImportError:
     from bs4 import BeautifulSoup
 
-import requests
-
-
-def find_best_url(all_url_suff, mov_type, year):
-    best_option = None
-    for url_suff in all_url_suff:
-        if ("tvshow" in url_suff.find_next("img")["src"] and mov_type == "episode") or (
-                        "movie" in url_suff.find_next("img")["src"] and mov_type == "movie"):
-            if year and year == url_suff.find_next("span").text:
-                return url_suff["href"]
-            elif best_option:
-                continue
-            else:
-                best_option = url_suff["href"]
-    if best_option:
-        return best_option
-    return all_url_suff[0]["href"]
-
-
-def get_headers():
-    return {
-        "Host":            "www.ktuvit.com", "Connection": "keep - alive", "Upgrade-Insecure-Requests": "1",
-        "User-Agent":      "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                           "Chrome/51.0.2704.103 Safari/537.36",
-        "Accept":          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q =0.8",
-        "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8,he;q =0.6"
-    }
-
-
-def get_se_ep_id(num, html_to_parse, se_or_ep):
-    vid_id = ""
-    ids = BeautifulSoup(html_to_parse.text, "html.parser").find_all("a", id=lambda x: x and x.startswith(se_or_ep))
-    for i in ids:
-        try:
-            if int(i.text) == num:
-                vid_id = i["id"]
-        except UnicodeEncodeError:
-            pass
-    return vid_id
-
-
-def get_id_with_reg(html_parsed):
-    reg_id = html_parsed.parent.find_previous("tr").find("a")["href"]
-    isMatch = re.match(r"/downloadsubtitle\.php\?id=(\d+)", reg_id)
-    if isMatch:
-        sub_id = isMatch.group(1)
-        return sub_id
-    return None
-
-
-def get_lang(html_parsed):
-    return html_parsed.parent.find_previous("div").find_previous("div").find("img")["title"].encode("utf-8")
-
 
 class Connection(object):
-    def __init__(self, username, password, app_dir):
-        self.app_dir_data = app_dir.user_data_dir
-        self.username = username
-        self.password = password
-        self.s = requests.Session()
-        options = webdriver.ChromeOptions()
-        prefs = {"download.default_directory": self.app_dir_data}
-        options.add_experimental_option("prefs", prefs)
-        self.driver = webdriver.Chrome(chrome_options=options)
-        self.cur_cache = {}
-        self.cache = {}
-        self.cache_file = os.path.join(app_dir.user_data_dir, CACHING_FILE)
-        if os.path.exists(self.cache_file):
-            with open(self.cache_file) as f:
-                self.cache = yaml.load(f)
-                if not self.cache:
-                    self.cache = {}
-        self.in_cache = []
+    def __init__(self, dir):
+        if not os.path.exists(dir.user_cache_dir):
+            os.mkdir(dir.user_cache_dir)
+        self.configuration_dir = dir.user_cache_dir
+        # configure the cache
+        region.configure('dogpile.cache.dbm', arguments={
+            'filename': os.path.join(self.configuration_dir, 'cachefile.dbm')
+            })
 
-    def login(self):
-        print "Please use the opened browser to login."
-        self.driver.get(URL + URL_LOGIN)
-        # fill the username and pass
-        self.driver.find_element_by_id("email").send_keys(self.username)
-        self.driver.find_element_by_id("password").send_keys(self.password)
-        # focus on the captcha box
-        try:
-            self.driver.find_element_by_id("recaptcha_response_field").send_keys("")
-        except:
-            pass
-        raw_input("Press Enter to continue...")
+    def download(self, path):
 
-    def download(self, full_title, data):
-        key = data["title"]
-        if data["type"] == "episode":
-            key += "." + str(data["season"]) + "." + str(data["episode"])
-        self.cur_cache = self.cache.get(key, {})
-        url_suff = ""
-        if not self.cur_cache:
-            url_suff = self.get_similar_from_cache(key, 0).get("url_suff", "")
-        if not self.cur_cache.get("url_suff") and not url_suff:
-            login_res = self.s.get(URL + URL_SEARCH + data["title"])
+        video = scan_video(path)
 
-            all_url_suff = BeautifulSoup(login_res.text, "html.parser").find_all("a", {"itemprop": "url"})
-            if len(all_url_suff) > 1:
-                url_suff = find_best_url(all_url_suff, data["type"], data.get("year"))
-            else:
-                try:
-                    url_suff = all_url_suff[0]["href"]
-                except:
-                    raise Exception("Can't find this title: " + data["title"])
-            self.cur_cache["url_suff"] = url_suff
-        else:
-            if not url_suff:
-                url_suff = self.cur_cache["url_suff"]
-            else:
-                self.cur_cache["url_suff"] = url_suff
+        # download best subtitles
+        subtitles = download_best_subtitles([video], {Language('heb')})
 
-        self.save_cache(key)
+        # save them to disk, next to the video
+        subtitle = save_subtitles(video, subtitles[video], single=True)
 
-        if data["type"] == "episode":
-            sub_download_page = self.download_ep_sub(data, url_suff, key)
-            self.save_cache(key)
-        else:
-            sub_download_page = self.download_mov_sub(data, url_suff)
-
-        sub_id = None
-
-        try:
-            html_sub_download = BeautifulSoup(sub_download_page.lower(), "html.parser")
-            try:
-                sub_id = \
-                    html_sub_download.find("div", title=full_title.lower()).parent.find_previous_sibling("tr").find(
-                            "td", class_="subtitle_tab").find("a")["name"]
-            except AttributeError:
-                sub_id = get_id_with_reg(html_sub_download.find("div", title=full_title.lower()))
-            try:
-                lang = get_lang(html_sub_download.find("div", title=full_title.lower()))
-                if lang != "עברית":
-                    sub_id = None
-            except AttributeError:
-                pass
-        except AttributeError:
-            try:
-                html_sub_download = BeautifulSoup(sub_download_page, "html.parser")
-                sub_id = get_id_with_reg(html_sub_download.find_all("div", title=lambda x: x and x.lower().endswith(
-                        data["release_group"].lower()))[0])
-                try:
-                    lang = get_lang(html_sub_download.find_all("div", title=lambda x: x and x.lower().endswith(
-                            data["release_group"].lower()))[0])
-                    if lang != "עברית":
-                        sub_id = None
-                except (AttributeError):
-                    pass
-            except (AttributeError, IndexError, KeyError):
-                try:
-                    html_sub_download = BeautifulSoup(sub_download_page, "html.parser")
-                    titles = html_sub_download.find_all("div")
-                    for title in titles:
-                        try:
-                            sub_data = guessit(title["title"])
-                            if sub_data["format"] == data["format"] and (
-                                            sub_data.get("screen_size") == data.get("screen_size") or sub_data[
-                                        "video_codec"] == data["video_codec"]) and get_lang(title) == "עברית":
-                                sub_id = get_id_with_reg(title)
-                                if sub_id:
-                                    break
-                        except KeyError:
-                            pass
-                except Exception:
-                    # this is probably mean that the subtitle not here yet
-                    sub_id = None
-        except Exception as e:
-            raise repr(e)
-        if not sub_id:
-            title = data["title"]
-            if data["type"] == "episode":
-                title += "." + str(data["season"]) + "." + str(data["episode"])
-            raise CantFindSubtitleException("Can't find subtitle id - for this title: " + title)
-
-        # sub_file_down_res = self.s.get(URL + URL_DOWNLOAD, params={"id": sub_id}, stream=True)
-        self.driver.get(URL + URL_DOWNLOAD + "?id=" + sub_id)
-        time.sleep(2)
-        sub_file_down_res_path = max([os.path.join(self.app_dir_data, f) for f in os.listdir(self.app_dir_data)],
-                                     key=os.path.getctime)
-        z = zipfile.ZipFile(sub_file_down_res_path)
-        for f in z.namelist():
-            if os.path.splitext(f)[1] in SUB_EXT:
-                ret = z.read(f)
-                try:
-                    ret = ret.encode("utf-8").replace("\r\n", "\n")
-                except:
-                    ret = ret.replace("\r\n", "\n")
-                return ret, os.path.splitext(f)[1]
-
-    def download_mov_sub(self, data, url_suff):
-        url_suff_match = re.search("/tt1(\d+)/", url_suff)
-        if url_suff_match:
-            url_suff = url_suff_match.group(1)
-        else:
-            raise Exception("Can't find this title: " + data["title"] + "\n")
-
-        # sub_download_page = self.s.post(URL + URL_AJAX, params={"moviedetailssubtitles": url_suff})
-        self.driver.get(URL + URL_AJAX + "?moviedetailssubtitles=" + url_suff)
-        # TODO: find something else
-        # try:
-        #     WebDriverWait(self.driver, timeout=5).until(
-        #             EC.presence_of_element_located((By.CLASS_NAME, "no_underline")))
-        # except:
-        #     pass
-        return self.driver.page_source
-
-    def download_ep_sub(self, data, url_suff, key):
-        season_id = self.get_similar_from_cache(key, 1).get("season_id", "")
-        if not self.cur_cache.get("season_id") and not season_id:
-            res_to_parse = self.s.get(URL + url_suff)
-            season_id = get_se_ep_id(data["season"], res_to_parse, "seasonlink_")
-            if not season_id:
-                raise Exception(
-                        "Can't find this season: " + str(data["season"]) + " - for this title: " + data["title"])
-            self.cur_cache["season_id"] = season_id
-        else:
-            if not season_id:
-                season_id = self.cur_cache["season_id"]
-            else:
-                self.cur_cache["season_id"] = season_id
-
-        if not self.cur_cache.get("episode_id"):
-            season_res = self.s.post(URL + URL_AJAX, params={"seasonid": season_id})
-            episode_id = get_se_ep_id(data["episode"], season_res, "episodelink_")
-            if not episode_id:
-                raise Exception("Can't find this episode: " + str(data["season"]) + "." + str(
-                        data["episode"]) + " - for this title: " + data["title"])
-            self.cur_cache["episode_id"] = episode_id
-        else:
-            episode_id = self.cur_cache["episode_id"]
-
-        # ep_res = self.s.post(URL + URL_AJAX, params={"episodedetails": episode_id})
-        self.driver.get(URL + URL_AJAX + "?episodedetails=" + episode_id)
-        try:
-            WebDriverWait(self.driver, timeout=5).until(
-                    EC.presence_of_element_located((By.CLASS_NAME, "g-res-menu-section")))
-        except:
-            pass
-        return self.driver.page_source
-
-    def close(self, specific):
-        if not specific:
-            self.clear_cache()
-            with open(self.cache_file, "wb") as f:
-                yaml.dump(self.cache, f)
-        self.driver.get(URL + URL_LOGOUT)
-        self.s.close()
-        self.driver.close()
-        clear_data_dir(self.app_dir_data)
-
-    def clear_cache(self):
-        for k, v in self.cache.items():
-            try:
-                if k not in self.in_cache and v["time_stamp"] < datetime.datetime.now() - datetime.timedelta(
-                        CACHE_DAYS):
-                    self.cache.pop(k)
-            except KeyError:
-                self.cache.pop(k)
-
-    def save_cache(self, key):
-        self.in_cache.append(key)
-        self.in_cache = list(set(self.in_cache))
-        self.cur_cache["time_stamp"] = datetime.datetime.now()
-        self.cache[key] = self.cur_cache
-
-    def get_similar_from_cache(self, key, level):
-        for k, v in self.cache.iteritems():
-            if ".".join(k.split(".")[:level + 1]) == ".".join(key.split(".")[:level + 1]):
-                return v
-        return {}
+        return subtitle[0]
