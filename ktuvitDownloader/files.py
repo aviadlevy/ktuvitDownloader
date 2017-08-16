@@ -42,7 +42,10 @@ def get_paths_files(path, to_clean=True):
             else:
                 data = guessit(f)
                 if to_clean:
-                    folderName = data["title"]
+                    if isinstance(data["title"], list):
+                        folderName = data["title"][0]
+                    else:
+                        folderName = data["title"]
                     if "year" in data.keys():
                         folderName += " - " + str(data["year"])
                     newPath = os.path.join(path, folderName)
@@ -89,6 +92,7 @@ def move_finshed(paths, base_dir, dest_dir):
     copied = 0
     for path in paths:
         p = ProgressBar("Moving files")
+        p.calculate_and_update(0, len(paths) * 2)
         exts = (path[1], ".srt", ".sub")
         path = path[0]
         folder_name = path.split("\\")[-2]
