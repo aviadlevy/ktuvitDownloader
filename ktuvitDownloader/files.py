@@ -83,6 +83,8 @@ def clear_data_dir(path):
 
 def clean_empty_dirs(path):
     for dir in [x[0] for x in os.walk(path)]:
+        if dir == path:
+            continue
         if not os.listdir(dir):
             os.rmdir(dir)
 
@@ -92,8 +94,7 @@ def move_finshed(paths, base_dir, dest_dir):
     copied = 0
     for path in paths:
         p = ProgressBar("Moving files")
-        p.calculate_and_update(0, len(paths) * 2)
-        exts = (path[1], ".srt", ".sub")
+        exts = (path[1], path[2])
         path = path[0]
         folder_name = path.split("\\")[-2]
         file_name = path.split("\\")[-1]
@@ -105,8 +106,6 @@ def move_finshed(paths, base_dir, dest_dir):
                 os.remove(path + ext)
             except shutil.Error:
                 pass
-            except IOError:
-                copied -= 1
             copied += 1
             p.calculate_and_update(copied, len(paths) * 2)
             is_moved = True

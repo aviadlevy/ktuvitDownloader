@@ -1,6 +1,13 @@
 ChangeLog
 =========
 
+4.0.0 (2018-01-xx)
+------------------
+
+- New sub provider: wizdom.xyz
+- re-write major parts of the tool
+- now supporting python 2 and python 3
+
 3.0.1 (2017-08-16)
 ------------------
 

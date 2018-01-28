@@ -1,14 +1,7 @@
 ktuvitDownloader
 ================
 
-NOTE: (15/06/17): Ktuvit don't work for now. :(
------------------------------------------------
-
-NOTE: (11/08/17): Using Opensubtitles with subliminal
------------------------------------------------------
-
-
-Auto-Download from Ktuvit.com
+Auto-Download from Wizdom.xyz
 -----------------------------
 
 .. image:: http://img.shields.io/pypi/v/ktuvitDownloader.svg
@@ -21,7 +14,7 @@ Auto-Download from Ktuvit.com
     :alt: LGPLv3 License
 
 
-This package will allow you to auto-download hebrew subtitles from the israeli site ktuvit.com website.
+This package will allow you to auto-download hebrew subtitles from the israeli site wizdom.xyz website.
 
 
 Hebrew video guide: `Click here <https://www.youtube.com/watch?v=vxPiKQtDaEA>`_
@@ -58,7 +51,7 @@ Just run cmd (WinKey + R, then type *cmd* and Enter) then::
 The "flow" is:
 
 - scan *"base"* directory, and **clean** any files smaller than 750KB, or videos smaller than 30MB.
-- search all video files on ktuvit.com and try to find best subtitle.
+- search all video files on wizdom.xyz and try to find best subtitle.
 - if we found a match, download and move the video+subtitle to the *"dest"* directory.
 
 TODO List:
@@ -70,6 +63,6 @@ TODO List:
 :Author:
     Aviad Levy
 
-:Version: 3.0.1
+:Version: 4.0.0
 
 :License: `LGPLv3 license <http://www.gnu.org/licenses/lgpl.html>`_

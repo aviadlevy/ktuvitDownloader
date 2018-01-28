@@ -18,7 +18,7 @@ with io.open(os.path.join(here, 'CHANGELOG.rst'), encoding='utf-8') as f:
 setup(
         name="ktuvitDownloader",
         version=version,
-        description="This package will allow you to auto-download subtitles from ktuvit.com website.",
+        description="This package will allow you to auto-download subtitles from wizdom.xyz website.",
         long_description=readme + "\n\n" + changelog,
         url="https://github.com/aviadlevy/ktuvitDownloader/",
         classifiers=["Development Status :: 5 - Production/Stable",
@@ -34,7 +34,10 @@ setup(
         packages=["ktuvitDownloader"],
         install_requires=[
             "appdirs",
-            "subliminal"
+            "guessit",
+            "imdbpie",
+            "requests",
+            "pyyaml"
         ],
         entry_points={
             "console_scripts": [

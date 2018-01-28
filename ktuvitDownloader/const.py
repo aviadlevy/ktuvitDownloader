@@ -1,15 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-URL = "http://www.ktuvit.com"
-URL_LOGIN = "/login.php"
-URL_LOGOUT = "/logout.php"
-URL_DOWNLOAD = "/downloadsubtitle.php"
-URL_AJAX = "/getajax.php"
-URL_SEARCH = "/browse.php?speechval=&q="
-
-LOGIN_ERROR = "הדואר אלקטרוני או הסיסמא שהזנת אינם נכונים"
-LOGIN_BLOCKED = "המשתמש שברשותך אינו פעיל"
+SCHEME = "http://"
+URL = "wizdom.xyz/"
+URL_JSON = SCHEME + "json." + URL
+URL_ZIP = SCHEME + "zip." + URL
 
 SUB_EXT = [".srt", ".sub"]
 VIDEO_EXT = [".webm", ".mkv", ".flv", ".avi", ".mov", ".wmv", ".rm", ".rmvb", ".mp4", ".m4p", ".m4v", ".mpg", ".mpeg",
@@ -21,7 +16,7 @@ CONFIG_FILE = ".ktuvitConfig.cfg"
 LOG_FILE = ".ktuvitLogger.log"
 CACHING_FILE = ".ktuvitCache.yml"
 
-MB = 1024 * 1024
 KB = 1024
+MB = KB * 1024
 
 CACHE_DAYS = 8
