@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import StringIO
+from __future__ import absolute_import
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import BytesIO
+
 import datetime
 import json
 import os
@@ -10,9 +16,10 @@ import requests
 import yaml
 from imdbpie import Imdb
 
-from const import *
-from files import clear_data_dir
 from ktuvitDownloader.CustomExceptions import *
+from .const import *
+from .files import clear_data_dir
+from io import open
 
 
 def find_best_sub(list_of_subs, data, title):
@@ -26,7 +33,7 @@ def find_best_sub(list_of_subs, data, title):
             return sub
     # then, some last chance logic
     for sub in list_of_subs:
-        if sub.get("format", "").lower == data["format"].lower() and (
+        if sub.get("format", "").lower() == data["format"].lower() and (
                 sub.get("resolution", "").lower() == data.get("screen_size", "").lower() or sub.get(
                 "video_codec").lower() == data.get("video_codec", "").lower()):
             return sub
@@ -35,7 +42,7 @@ def find_best_sub(list_of_subs, data, title):
 def get_json_from_wizdom(imdb_id):
     res = requests.get(URL_JSON + imdb_id + ".json")
     if res.status_code == 200:
-        return res.content
+        return res.text
 
 
 class Downloader(object):
@@ -74,14 +81,17 @@ class Downloader(object):
 
     def get_sub_zip_file(self, sub_json):
         sub_file_down_res = requests.get(URL_ZIP + sub_json.get("id") + ".zip")
-        return zipfile.ZipFile(StringIO.StringIO(sub_file_down_res.content))
+        try:
+            return zipfile.ZipFile(StringIO(sub_file_down_res.content))
+        except NameError:
+            return zipfile.ZipFile(BytesIO(sub_file_down_res.content))
 
     def get_sub_content(self, f, z):
         ret = z.read(f)
         try:
-            ret = ret.encode("utf-8").replace("\r\n", "\n")
+            ret = ret.encode("utf-8").replace(b'\r\n', bytes('\n'))
         except:
-            ret = ret.replace("\r\n", "\n")
+            ret = ret.replace(b'\r\n', b'\n')
         return ret, os.path.splitext(f)[1]
 
     def sub_not_found_handler(self, data):
@@ -124,7 +134,7 @@ class Downloader(object):
     def close(self, specific):
         if not specific:
             self.clear_cache()
-            with open(self.cache_file, "wb") as f:
+            with open(self.cache_file, "w") as f:
                 yaml.dump(self.cache, f)
         clear_data_dir(self.app_dir_data)
 

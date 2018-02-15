@@ -3,6 +3,7 @@
 The Progress Bar code written by Joey Payne
 see here: http://pythoncentral.io/how-to-movecopy-a-file-or-directory-folder-with-a-progress-bar-in-python/
 """
+from __future__ import absolute_import
 import sys
 
 

@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 import os
 import shutil
 
 from guessit import guessit
 
-from const import *
+from .const import *
 from ktuvitDownloader.progress_bar import ProgressBar
 
 
@@ -46,7 +47,7 @@ def get_paths_files(path, to_clean=True):
                         folderName = data["title"][0]
                     else:
                         folderName = data["title"]
-                    if "year" in data.keys():
+                    if "year" in list(data.keys()):
                         folderName += " - " + str(data["year"])
                     newPath = os.path.join(path, folderName)
                     try:

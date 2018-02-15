@@ -7,6 +7,7 @@ ChangeLog
 - New sub provider: wizdom.xyz
 - re-write major parts of the tool
 - now supporting python 2 and python 3
+- verbose option added
 
 3.0.1 (2017-08-16)
 ------------------

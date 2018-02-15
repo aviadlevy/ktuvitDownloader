@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from argparse import ArgumentParser
 
 
@@ -33,7 +34,9 @@ def get_args():
     information_opts.add_argument("-c", "--configuration", dest="show_configuration", action="store_true",
                                   default=False, help="Display configuration.")
     information_opts.add_argument("-v", "--version", dest="show_version", action="store_true", default=False,
-                                  help="Display the package version.")
+                                  help="Display the package version")
+    information_opts.add_argument("--verbose", dest="verbose", action="store_true", default=False,
+                                  help="Display logs also on screen")
     information_opts.add_argument("-l", "--log", dest="show_log", action="store_true", default=False,
                                   help="Display short log")
     information_opts.add_argument("-la", "--all-log", dest="show_all_log", action="store_true", default=False,

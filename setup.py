@@ -1,3 +1,6 @@
+# coding=utf-8
+
+from __future__ import absolute_import
 import io
 import os
 import re
@@ -25,7 +28,8 @@ setup(
                      "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
                      "Operating System :: OS Independent",
                      "Intended Audience :: End Users/Desktop",
-                     "Programming Language :: Python :: 2.7",
+                     "Programming Language :: Python :: 2",
+                     "Programming Language :: Python :: 3",
                      "Topic :: Multimedia",
                      ],
         author="Aviad Levy",
@@ -37,7 +41,8 @@ setup(
             "guessit",
             "imdbpie",
             "requests",
-            "pyyaml"
+            "pyyaml",
+            "six"
         ],
         entry_points={
             "console_scripts": [

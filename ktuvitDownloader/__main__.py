@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import ConfigParser
+from __future__ import absolute_import, print_function
+
 import json
 import logging
 import os
@@ -9,18 +10,22 @@ from datetime import datetime
 from logging import handlers
 from time import sleep
 
+from six.moves import configparser
 import yaml
 from appdirs import AppDirs
 from guessit import guessit
+from six.moves import input, range
 
 from ktuvitDownloader.CustomExceptions import CantFindSubtitleException
 from ktuvitDownloader.__version__ import __version__
-from ktuvitDownloader.downloader import Downloader
 from ktuvitDownloader.const import *
+from ktuvitDownloader.downloader import Downloader
 from ktuvitDownloader.files import get_paths_files, move_finshed
 from ktuvitDownloader.options import args_parse, parse_log
+from io import open
 
-config = ConfigParser.RawConfigParser()
+config = configparser.RawConfigParser()
+
 app_dir = AppDirs("ktuvitdownloader")
 config_file = os.path.join(app_dir.user_data_dir, CONFIG_FILE)
 log_file = os.path.join(app_dir.user_data_dir, LOG_FILE)
@@ -35,8 +40,10 @@ def main():
     check_user_data_dir()
     global logger
     logger = logging.getLogger()
-    logger.addHandler(get_handler(not options.specific))
     logger.setLevel(logging.INFO)
+    logger.addHandler(get_file_handlers())
+    if options.verbose:
+        logger.addHandler(get_console_handlers())
 
     base_dir = ""
     dest_dir = ""
@@ -63,6 +70,10 @@ def main():
 
     if not os.path.isfile(config_file):
         options.reset = True
+    else:
+        config.read(config_file)
+        if not config.has_section("Directories"):
+            options.reset = True
 
     if options.reset:
         if not options.specific:
@@ -78,7 +89,6 @@ def main():
     if options.dest_path:
         dest_dir = handle_dir("dest_dir")
 
-    config.read(config_file)
     if not options.specific:
         base_dir = config.get("Directories", "base_dir")
         dest_dir = config.get("Directories", "dest_dir")
@@ -86,7 +96,7 @@ def main():
     files = get_paths_files(base_dir, to_clean=not options.specific)
 
     if options.organize:
-        print "Goodbye..."
+        print("Goodbye...")
         sleep(2)
         exit(1)
 
@@ -94,13 +104,15 @@ def main():
 
 
 def handle_dir(dir_str):
-    dir = raw_input("Enter the path to : " + dir_str)
+    dir = input("Enter the path to " + dir_str + ": ")
     while not os.path.isdir(dir):
-        print "Can't find this directory."
-        dir = raw_input("Try again: ")
+        print("Can't find this directory.")
+        dir = input("Try again: ")
     try:
-        config.set("Directories", dir_str, dir)
-    except ConfigParser.DuplicateSectionError:
+        if not config.has_section("Directories"):
+            config.add_section("Directories")
+        config.set(u"Directories", dir_str, dir)
+    except configparser.DuplicateSectionError:
         pass
     with open(config_file, "wb") as f:
         config.write(f)
@@ -112,7 +124,7 @@ def handle_specific(options):
     if not os.path.isdir(base_dir):
         ext = os.path.splitext(base_dir)[1]
         if ext not in VIDEO_EXT:
-            print "The path you supplied  is not known video format.\nPlease try again."
+            print("The path you supplied  is not known video format.\nPlease try again.")
             exit(-1)
         else:
             file_name = base_dir.split("\\")[-1]
@@ -144,31 +156,31 @@ def print_cache():
         raise TypeError("Type not serializable")
 
     if not os.path.isfile(cache_file):
-        print "Nothing to show"
+        print("Nothing to show")
     else:
         with open(cache_file) as f:
             text = yaml.load(f)
         if not text:
-            print "Nothing to show"
+            print("Nothing to show")
         else:
-            print json.dumps(text, default=json_serial, indent=4, ensure_ascii=False)
+            print(json.dumps(text, default=json_serial, indent=4, ensure_ascii=False))
 
 
 def print_configuration():
     if not os.path.isfile(config_file):
-        print "Nothing to show"
+        print("Nothing to show")
     else:
         with open(config_file) as f:
             text = f.read()
         if not text:
-            print "Nothing to show"
+            print("Nothing to show")
         else:
-            print text
+            print(text)
 
 
 def print_log(isShort):
     if not os.path.isfile(log_file):
-        print "Nothing to show"
+        print("Nothing to show")
     else:
         with open(log_file) as f:
             if isShort:
@@ -177,9 +189,9 @@ def print_log(isShort):
             else:
                 text = f.read()
         if not text:
-            print "Nothing to show"
+            print("Nothing to show")
         else:
-            print text
+            print(text)
 
 
 def print_version():
@@ -191,14 +203,20 @@ def print_version():
     print("+-------------------------------------------------------+")
 
 
-def get_handler(isFile):
+def get_file_handlers():
     formatter = logging.Formatter(fmt="%(asctime)s\t%(levelname)s: %(message)s")
-    if isFile:
-        handler = handlers.RotatingFileHandler(filename=log_file, maxBytes=MB)
-    else:
-        handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(formatter)
-    return handler
+    file_handler = handlers.RotatingFileHandler(filename=log_file, maxBytes=MB)
+    file_handler.setFormatter(formatter)
+    file_handler.setLevel(logging.INFO)
+    return file_handler
+
+
+def get_console_handlers():
+    formatter = logging.Formatter(fmt="%(asctime)s\t%(levelname)s: %(message)s")
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(formatter)
+    stream_handler.setLevel(logging.INFO)
+    return stream_handler
 
 
 def download_handler(base_dir, dest_dir, files, specific=False):
@@ -213,9 +231,9 @@ def download_handler(base_dir, dest_dir, files, specific=False):
             logger.error(repr(e))
     downloader.close(specific)
     if move_finshed(downloaded, base_dir, dest_dir):
-        print "\n\nDone! check your Dest folder. you may find a surprise..."
+        print("\n\nDone! check your Dest folder. you may find a surprise...")
     else:
-        print "Done!"
+        print("Done!")
 
 
 def one_download_handler(downloader, data, downloaded, path):
@@ -223,9 +241,12 @@ def one_download_handler(downloader, data, downloaded, path):
     generic_path = os.path.splitext(path)[0]
     sub_file, sub_ext = downloader.download(data, generic_path.split("\\")[-1])
     logger.info("Found " + path + "!")
-    print "Found", path.split("\\")[-1]
-    with open(generic_path + sub_ext, "w") as f:
-        f.write(sub_file)
+    print("Found", path.split("\\")[-1])
+    with open(generic_path + sub_ext, "wb") as f:
+        try:
+            f.write(sub_file.encode('utf-8'))
+        except:
+            f.write(sub_file)
     downloaded.append((generic_path, sub_ext, vid_ext))
 
 
