@@ -62,6 +62,7 @@ class Downloader(object):
 
     def download(self, data, full_title):
         key = data["title"]
+        self.logger.info("searching subs for " + key)
         if data["type"] == "episode":
             key += "." + str(data["season"]) + "." + str(data["episode"])
         self.cur_cache = self.cache.get(key, {})
@@ -125,11 +126,12 @@ class Downloader(object):
     def get_ep_sub(self, data, wizdom_json, full_title):
         season_json = wizdom_json.get(str(data["season"]), {})
         if season_json:
+            self.logger.info("found season " + str(data["season"]))
             episode_json = season_json.get(str(data["episode"]), {})
             if episode_json:
                 return find_best_sub(episode_json, data, full_title)
-            raise CantFindSubtitleException("can't find episode: " + data["episode"])
-        raise CantFindSubtitleException("can't find season: " + data["season"])
+            raise CantFindSubtitleException("can't find episode: " + str(data["episode"]))
+        raise CantFindSubtitleException("can't find season: " + str(data["season"]))
 
     def close(self, specific):
         if not specific:

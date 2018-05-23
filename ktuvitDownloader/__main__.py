@@ -68,6 +68,8 @@ def main():
         print_cache()
         exit(0)
 
+    logger.info("Starting...")
+
     if not os.path.isfile(config_file):
         options.reset = True
     else:
@@ -93,6 +95,7 @@ def main():
         base_dir = config.get("Directories", "base_dir")
         dest_dir = config.get("Directories", "dest_dir")
 
+    logger.info("Organizing files...")
     files = get_paths_files(base_dir, to_clean=not options.specific)
 
     if options.organize:
@@ -100,6 +103,7 @@ def main():
         sleep(2)
         exit(1)
 
+    logger.info("Searching for subtitles...")
     download_handler(base_dir, dest_dir, files, options.specific)
 
 

@@ -17,8 +17,6 @@ Auto-Download from Wizdom.xyz
 This package will allow you to auto-download hebrew subtitles from the israeli site wizdom.xyz website.
 
 
-Hebrew video guide: `Click here <https://www.youtube.com/watch?v=vxPiKQtDaEA>`_
-
 Install
 -------
 
@@ -63,6 +61,6 @@ TODO List:
 :Author:
     Aviad Levy
 
-:Version: 4.0.0
+:Version: 4.0.1
 
 :License: `LGPLv3 license <http://www.gnu.org/licenses/lgpl.html>`_
