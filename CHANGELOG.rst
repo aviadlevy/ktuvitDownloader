@@ -1,6 +1,11 @@
 ChangeLog
 =========
 
+4.0.2 (2019-08-11)
+------------------
+
+- Bug fix when trying to save to configuration
+
 4.0.0 (2018-05-23)
 ------------------
 
