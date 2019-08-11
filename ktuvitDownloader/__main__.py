@@ -118,7 +118,7 @@ def handle_dir(dir_str):
         config.set(u"Directories", dir_str, dir)
     except configparser.DuplicateSectionError:
         pass
-    with open(config_file, "wb") as f:
+    with open(config_file, "w") as f:
         config.write(f)
     return dir
 
